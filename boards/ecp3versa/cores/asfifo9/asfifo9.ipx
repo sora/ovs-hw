@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<DiamondModule name="asfifo9" module="asfifo9" VendorName="Lattice Semiconductor Corporation" generator="IPexpress" date="2012 09 30 23:37:17.355" version="5.4" type="Module" synthesis="synplify" source_format="Verilog HDL">
+  <Package>
+		<File name="asfifo9.lpc" type="lpc" modified="2012 09 30 23:37:14.000"/>
+		<File name="asfifo9.v" type="top_level_verilog" modified="2012 09 30 23:37:15.000"/>
+		<File name="asfifo9_tmpl.v" type="template_verilog" modified="2012 09 30 23:37:15.000"/>
+		<File name="tb_asfifo9_tmpl.v" type="testbench_verilog" modified="2012 09 30 23:37:15.000"/>
+  </Package>
+</DiamondModule>

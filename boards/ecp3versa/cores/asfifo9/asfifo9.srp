@@ -1,0 +1,42 @@
+SCUBA, Version Diamond_2.0_Production (151)
+Sun Sep 30 23:37:15 2012
+
+Copyright (c) 1991-1994 by NeoCAD Inc. All rights reserved.
+Copyright (c) 1995 AT&T Corp.   All rights reserved.
+Copyright (c) 1995-2001 Lucent Technologies Inc.  All rights reserved.
+Copyright (c) 2001 Agere Systems   All rights reserved.
+Copyright (c) 2002-2012 Lattice Semiconductor Corporation,  All rights reserved.
+
+    Issued command   : /usr/local/diamond/2.0/ispfpga/bin/lin/scuba -w -n asfifo9 -lang verilog -synth synplify -bus_exp 7 -bb -arch ep5c00 -type fifodc -addr_width 8 -data_width 9 -num_words 256 -rdata_width 9 -no_enable -pe -1 -pf -1 -e 
+    Circuit name     : asfifo9
+    Module type      : ebfifo
+    Module Version   : 5.4
+    Ports            : 
+	Inputs       : Data[8:0], WrClock, RdClock, WrEn, RdEn, Reset, RPReset
+	Outputs      : Q[8:0], Empty, Full
+    I/O buffer       : not inserted
+    EDIF output      : suppressed
+    Verilog output   : asfifo9.v
+    Verilog template : asfifo9_tmpl.v
+    Verilog testbench: tb_asfifo9_tmpl.v
+    Verilog purpose  : for synthesis and simulation
+    Bus notation     : big endian
+    Report output    : asfifo9.srp
+    Element Usage    :
+          AGEB2 : 10
+           AND2 : 2
+            CU2 : 10
+         FADD2B : 6
+        FD1P3BX : 2
+        FD1P3DX : 52
+        FD1S3BX : 1
+        FD1S3DX : 37
+            INV : 2
+            OR2 : 1
+       ROM16X1A : 22
+           XOR2 : 16
+         DP16KC : 1
+    Estimated Resource Usage:
+            LUT : 93
+            EBR : 1
+            Reg : 92

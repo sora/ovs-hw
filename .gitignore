@@ -1,0 +1,18 @@
+# global
+!.keep_me
+*.swp
+a.out
+
+# lattice
+.run_manager.ini
+.spread_sheet.ini
+.spreadsheet_view.ini
+.setting.ini
+.build_status
+*.ccl
+reportview.xml
+build/
+
+t_data.hex
+test.vcd
+tb_system

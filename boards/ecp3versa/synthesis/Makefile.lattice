@@ -1,0 +1,10 @@
+BASE = ovs_hw
+BUILD_DIR=build
+
+$(BASE)_build.bit:
+	diamondc tcl-cmd/run.tcl
+
+load: $(BASE)_build.bit
+	diamondc tcl-cmd/load.tcl
+
+include common.mak

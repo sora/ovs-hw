@@ -1,0 +1,47 @@
+[Device]
+Family=latticeecp3
+PartType=LFE3-35EA
+PartName=LFE3-35EA-8FN484C
+SpeedGrade=8
+Package=FPBGA484
+OperatingCondition=COM
+Status=P
+
+[IP]
+VendorName=Lattice Semiconductor Corporation
+CoreType=LPM
+CoreStatus=Demo
+CoreName=FIFO_DC
+CoreRevision=5.4
+ModuleName=asfifo9
+SourceFormat=Verilog HDL
+ParameterFileVersion=1.0
+Date=09/30/2012
+Time=23:37:14
+
+[Parameters]
+Verilog=1
+VHDL=0
+EDIF=1
+Destination=Synplicity
+Expression=BusA(0 to 7)
+Order=Big Endian [MSB:LSB]
+IO=0
+FIFOImp=EBR Based
+Depth=256
+Width=9
+RDepth=256
+RWidth=9
+regout=0
+CtrlByRdEn=0
+EmpFlg=0
+PeMode=Static - Dual Threshold
+PeAssert=10
+PeDeassert=12
+FullFlg=0
+PfMode=Static - Dual Threshold
+PfAssert=508
+PfDeassert=506
+RDataCount=0
+WDataCount=0
+EnECC=0

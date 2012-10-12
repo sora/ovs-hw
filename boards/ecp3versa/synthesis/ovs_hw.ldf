@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<BaliProject version="2.0" title="ovs_hw" device="LFE3-35EA-8FN484C" default_implementation="build">
+    <Options/>
+    <Implementation title="build" dir="build" description="ovs_hw" default_strategy="Strategy1">
+        <Options/>
+        <Source name="../rtl/top.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="../cores/asfifo9/asfifo9.ipx" type="IPX_Module" type_short="IPX">
+            <Options/>
+        </Source>
+        <Source name="../rtl/rx.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="../rtl/tx.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="../../../cores/filter/rtl/filter.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="../../../cores/crc/rtl/crc_gen.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="build/build.xcf" type="ispVM Download Project" type_short="ispVM">
+            <Options/>
+        </Source>
+        <Source name="ovs_hw.lpf" type="Logic Preference" type_short="LPF">
+            <Options/>
+        </Source>
+    </Implementation>
+    <Strategy name="Strategy1" file="Strategy1.sty"/>
+</BaliProject>

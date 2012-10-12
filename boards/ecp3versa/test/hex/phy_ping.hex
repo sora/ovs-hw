@@ -1,0 +1,110 @@
+55    // Preamble
+55
+55
+55
+55
+55
+55
+d5    // SFD
+00    // Dest MAC
+a0
+de
+1c
+07
+e8
+00    // Source MAC
+23
+6c
+91
+9a
+d2
+08    // Type=IPv4 (0x0800)
+00
+45    // Version=4, Header Length=20
+00
+00    // Total Length=84 (0x0054)
+54
+f8    // Identification=63641 (0xf899)
+99
+00
+00
+40    // TTL=0x40
+01    // Protocol=ICMP (1)
+44    // Header CheckSum
+9d
+0a    // Source IP=10.0.21.105
+00
+15
+69
+0a    // Dest IP=10.0.20.10
+00
+14
+0a
+08    // Type=8 (Echo ping request)
+00
+d5    // Checksum
+45
+b8
+07
+00
+07
+4f    // Data 56 bytes
+ac
+84
+06
+00
+05
+ab
+f0
+08
+09
+0a
+0b
+0c
+0d
+0e
+0f
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+1a
+1b
+1c
+1d
+1e
+1f
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+2a
+2b
+2c
+2d
+2e
+2f
+30
+31
+32
+33
+34
+35
+36
+37
+11    // DUMMY FCS=0x11223344
+22
+33
+44

@@ -1,0 +1,80 @@
+55    // Preamble
+55
+55
+55
+55
+55
+55
+d5    // SFD
+00    // Dest MAC
+a0
+de
+1c
+07
+e8
+00    // Source MAC
+23
+6c
+91
+9a
+d2
+08    // Type=IPv4 (0x800)
+00
+45
+10
+00    // Total Length=54 (0x0036)
+36
+d7    // Identification=55117 (0xd74d)
+4d
+40
+00
+40    // TTL=64 (0x40)
+06    // Protocol=TCP (6)
+25    // Header checksum=0x25fb
+fb
+0a    // Source IP=10.0.21.105
+00
+15
+69
+0a    // Dest IP=10.0.20.1
+00
+14
+01
+c2    // Source port=49889 (0xc2e1)
+e1
+00    // Dest port=23 (0x0017)
+17
+76
+a2
+bf
+af
+f1
+e0
+1b
+1a
+80    // Header length=32bytes(?)
+18
+ff    // Windows size=65535 (0xffff)
+ff
+bc    // Checksum=0xbc5d
+5d
+00
+00
+01    // Options 12 bytes
+01
+08
+0a
+18
+f8
+6e
+de
+86
+5c
+5b
+73
+0d    // Telnet (Data=\r)
+00
+11    // Dummy FCS=0x11223344
+22
+33
+44
