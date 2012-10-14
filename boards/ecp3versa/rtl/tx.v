@@ -19,15 +19,15 @@ wire      fifo_full;
 //`ifdef ECP3VERSA
 asfifo9 txq (
     .Data(wr_data)
-  , .WrClock(wr_clk)
-  , .RdClock(phy_gtx_clk)
+  , .Full(fifo_full)
   , .WrEn(wr_en)
-  , .RdEn(phy_tx_en)
-  , .Reset(sys_rst)
-  , .RPReset()
+  , .WrClock(wr_clk)
   , .Q(fifo_dout)
   , .Empty(fifo_empty)
-  , .Full(fifo_full)
+  , .RdEn(rd_en)
+  , .RdClock(phy_gtx_clk)
+  , .Reset(sys_rst)
+  , .RPReset()
 );
 //`endif
 `else

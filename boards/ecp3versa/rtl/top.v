@@ -9,7 +9,7 @@ module top (
   , input        phy0_rx_er
   , input        phy0_rx_dv
   , input  [7:0] phy0_rxd
-  , output       phy0_tx_clk      // MII 25MHz
+  , input        phy0_tx_clk      // MII 25MHz
   , output       phy0_tx_en
   , output [7:0] phy0_txd
   , output       phy0_gtx_clk     // GMII 125MHz
@@ -22,7 +22,7 @@ module top (
   , input        phy1_rx_er
   , input        phy1_rx_dv
   , input  [7:0] phy1_rxd
-  , output       phy1_tx_clk
+  , input        phy1_tx_clk
   , output       phy1_tx_en
   , output [7:0] phy1_txd
   , output       phy1_gtx_clk
