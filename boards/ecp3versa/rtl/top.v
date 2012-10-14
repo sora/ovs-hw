@@ -2,8 +2,9 @@
 `define ECP3VERSA
 
 module top (
-    input        rstn
-  // PHY0
+	  input        clock
+  , input        reset_n
+// PHY0
   , output       phy0_rstn
   , input        phy0_rx_clk      // MII 25MHz
   , input        phy0_rx_er
@@ -16,7 +17,7 @@ module top (
   , input        phy0_125M_clk
   , output       phy0_mii_clk
   , output       phy0_mii_data
-  // PHY1
+// PHY1
   , output       phy1_rstn
   , input        phy1_rx_clk
   , input        phy1_rx_er
@@ -29,11 +30,14 @@ module top (
   , input        phy1_125M_clk
   , output       phy1_mii_clk
   , output       phy1_mii_data
-  // Switch and LED
-  , input  [7:0] dip_switch
-  , output [7:0] led
+// Switch and LED
+  //, input  [7:0]  switch
+  //, output [14:0] segled
+  , output [7:0]  led
 );
 
+wire   phy0_25M_clk  = phy0_tx_clk;
+wire   phy1_25M_clk  = phy1_tx_clk;
 assign phy0_mii_clk  = 1'b0;
 assign phy0_mii_data = 1'b0;
 assign phy1_mii_clk  = 1'b0;
@@ -49,8 +53,8 @@ wire sys_clk = phy0_125M_clk;
 `ifndef SIMULATION
 reg       sys_rstn;                  // sys reset
 reg[19:0] rstn_cnt;
-always @(posedge sys_clk or negedge rstn) begin
-  if (!rstn) begin
+always @(posedge sys_clk or negedge reset_n) begin
+  if (!reset_n) begin
     rstn_cnt <= 20'b0;
     sys_rstn <= 1'b0;
   end else begin
@@ -65,7 +69,7 @@ wire sys_rst = ~sys_rstn;
 assign phy0_rstn = sys_rstn;
 assign phy1_rstn = sys_rstn;
 `else
-  wire sys_rst = ~rstn;
+  wire sys_rst = ~reset_n;
 `endif
 
 /* --------------------------------------- */
@@ -153,7 +157,7 @@ filter filter (
 /* --------------------------------------- */
 /* LED */
 reg[31:0] led_cnt = 32'b0;
-always @(posedge sys_clk) begin
+always @(posedge clock) begin
   if (sys_rst)
     led_cnt <= 32'b0;
   else

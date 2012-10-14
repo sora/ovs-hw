@@ -1,13 +1,13 @@
-SCUBA, Version Diamond_2.0_Production (151)
-Sun Sep 30 23:37:15 2012
+SCUBA, Version Diamond_1.4_Production (87)
+Sun Oct 14 22:04:50 2012
 
 Copyright (c) 1991-1994 by NeoCAD Inc. All rights reserved.
 Copyright (c) 1995 AT&T Corp.   All rights reserved.
 Copyright (c) 1995-2001 Lucent Technologies Inc.  All rights reserved.
 Copyright (c) 2001 Agere Systems   All rights reserved.
-Copyright (c) 2002-2012 Lattice Semiconductor Corporation,  All rights reserved.
+Copyright (c) 2002-2011 Lattice Semiconductor Corporation,  All rights reserved.
 
-    Issued command   : /usr/local/diamond/2.0/ispfpga/bin/lin/scuba -w -n asfifo9 -lang verilog -synth synplify -bus_exp 7 -bb -arch ep5c00 -type fifodc -addr_width 8 -data_width 9 -num_words 256 -rdata_width 9 -no_enable -pe -1 -pf -1 -e 
+    Issued command   : /usr/local/diamond/1.4/ispfpga/bin/lin/scuba -w -n asfifo9 -lang verilog -synth synplify -bus_exp 7 -bb -arch ep5c00 -type fifodc -addr_width 8 -data_width 9 -num_words 256 -rdata_width 9 -no_enable -pe -1 -pf -1 -e 
     Circuit name     : asfifo9
     Module type      : ebfifo
     Module Version   : 5.4

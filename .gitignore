@@ -10,8 +10,15 @@ a.out
 .setting.ini
 .build_status
 *.ccl
+*.log
+*.txt
 reportview.xml
-build/
+ovs_hw_ovs_hw*
+ovs_hw/syntmp/
+syntmp
+*.pty
+*.prs
+
 
 t_data.hex
 test.vcd

@@ -10,6 +10,9 @@ module tx (
   , output [7:0] phy_txd
 );
 
+wire      rd_en = ~fifo_empty && (state != PREAMBLE);
+reg[12:0] count = 13'b0;
+
 /* --------------------------------------- */
 /* send FIFO */
 wire[8:0] fifo_dout;
@@ -59,7 +62,6 @@ parameter[1:0]
   , SEND_FCS  = 2'b11;
 
 reg[1:0]  state     = 2'b0;
-reg[12:0] count     = 13'b0;
 reg[1:0]  fcs_count = 2'b0;
 reg       tx_en     = 1'b0;
 reg[7:0]  txd       = 8'h0;
@@ -85,8 +87,6 @@ crc_gen crc_inst (
 
 /* --------------------------------------- */
 /* tx */
-
-wire rd_en = ~fifo_empty && (state != PREAMBLE);
 
 always @(posedge phy_gtx_clk) begin
   if (sys_rst) begin

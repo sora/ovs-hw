@@ -16,8 +16,8 @@ CoreRevision=5.4
 ModuleName=asfifo9
 SourceFormat=Verilog HDL
 ParameterFileVersion=1.0
-Date=09/30/2012
-Time=23:37:14
+Date=10/14/2012
+Time=22:04:50
 
 [Parameters]
 Verilog=1
