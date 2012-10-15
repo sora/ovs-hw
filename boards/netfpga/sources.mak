@@ -1,0 +1,11 @@
+BOARD_SRC=$(wildcard $(BOARD_DIR)/*.v)
+
+#ASFIFO_SRC=$(wildcard $(CORES_DIR)/asfifo/rtl/*.v)
+FIFO9TOGMII_SRC=$(wildcard $(CORES_DIR)/fifo9togmii/rtl/*.v)
+GMII2FIFO9_SRC=$(wildcard $(CORES_DIR)/gmii2fifo9/rtl/*.v)
+RGMII2GMII_SRC=$(wildcard $(CORES_DIR)/rgmii2gmii/rtl/*.v)
+SFIFO_SRC=$(wildcard $(CORES_DIR)/sfifo/rtl/*.v)
+CRC_SRC=$(wildcard $(CORES_DIR)/crc/rtl/*.v)
+FILTER_SRC=$(wildcard $(CORES_DIR)/filter/rtl/*.v)
+COREGEN_SRC=$(wildcard $(CORES_DIR)/coregen/*.v)
+CORES_SRC=$(ASFIFO_SRC) $(FIFO9TOGMII_SRC) $(GMII2FIFO9_SRC) $(RGMII2GMII_SRC) $(COREGEN_SRC) $(CRC_SRC) $(FILTER_SRC)

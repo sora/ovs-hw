@@ -1,0 +1,10 @@
+run
+-ifn top.prj
+-top top
+-ifmt MIXED
+-opt_mode SPEED
+-opt_level 1
+-ofn top.ngc
+-p xc2vp50-ff1152-7
+-register_balancing yes
+-signal_encoding user

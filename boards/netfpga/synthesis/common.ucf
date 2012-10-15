@@ -1,0 +1,553 @@
+CONFIG PART = xc2vp50-ff1152-7 ;
+
+## NET  "reset_in"               LOC = "AH9" ;
+#
+
+#----------------------------------------------------
+# External RGMII Constraints                               #
+#----------------------------------------------------
+
+# RGMII Receiver Constraints: place DDR registers in IOB
+##INST "rgmii*rgmii_rxd_ddr*"   IOB = true;
+##INST "rgmii*rgmii_rx_dv_ddr"  IOB = true;
+##INST "rgmii*rgmii_rx_ctl_ddr" IOB = true;
+
+##NET "rgmii_?_rxc_ibuf" MAXDELAY=2.5ns;
+
+NET "rgmii_?_txd(?)"         SLEW = FAST;
+NET "rgmii_?_tx_ctl"         SLEW = FAST;
+NET "rgmii_?_txc"            SLEW = FAST;
+
+#----------------------------------------------------
+# RGMII Receiver side DCM Constraints                      #
+#----------------------------------------------------
+# DCM Phase Shift required is dependant on FPGA device and
+# may need to be changed.
+##INST RGMII_?_RX_DCM CLKOUT_PHASE_SHIFT = FIXED;
+##INST RGMII_?_RX_DCM PHASE_SHIFT = 90;
+
+
+#----------------------------------------------------
+# RGMII receiver side double data rate falling to rising
+# edge reclocking.  These constraints take into account the
+# worst case clock period with worst case duty cycle.
+#----------------------------------------------------
+##INST "rgmii*rgmii_rxd_reg_4"      TNM="rgmii_falling";
+##INST "rgmii*rgmii_rxd_reg_5"      TNM="rgmii_falling";
+##INST "rgmii*rgmii_rxd_reg_6"      TNM="rgmii_falling";
+##INST "rgmii*rgmii_rxd_reg_7"      TNM="rgmii_falling";
+##INST "rgmii*rgmii_rx_ctl_reg"     TNM="rgmii_falling";
+##INST "rgmii*gmii_rxd_reg_4"       TNM="rgmii_rising";
+##INST "rgmii*gmii_rxd_reg_5"       TNM="rgmii_rising";
+##INST "rgmii*gmii_rxd_reg_6"       TNM="rgmii_rising";
+##INST "rgmii*gmii_rxd_reg_7"       TNM="rgmii_rising";
+##INST "rgmii*gmii_rx_er_reg"       TNM="rgmii_rising";
+##TIMESPEC "TS_rgmii_falling_to_rising" = FROM "rgmii_falling" TO "rgmii_rising" 3200 ps;
+
+#----------------------------------------------------
+# Clock period Constraints                                 #
+#----------------------------------------------------
+##NET "rx_rgmii_?_clk_int" TNM_NET = "clk_rx";
+##TIMEGRP "rx_clock"               = "clk_rx";
+##TIMESPEC "TS_rx_clk"             = PERIOD "rx_clock" 8000 ps HIGH 50 %;
+
+
+##NET "tx_rgmii_clk*" TNM_NET    = "clk_tx_gmii";
+##TIMEGRP "tx_clock_gmii"        = "clk_tx_gmii";
+##TIMESPEC "TS_tx_clk_gmii"      = PERIOD "tx_clock_gmii" 8000 ps HIGH 50 %;
+
+
+#----------------------------------------------------
+# Crossing of Clock Domain Constraints: please do not edit #
+#----------------------------------------------------
+# Flow Control logic reclocking
+
+#TIMESPEC "TS_flow_rx_to_tx" = FROM "flow_rx_to_tx" TO "tx_clock_gmii" 8000 ps DATAPATHONLY;
+
+
+#----------------------------------------------------
+# Force BUFGMUX assignments
+#----------------------------------------------------
+
+#INST "BUFGMUX_TXCLK"   LOC = "BUFGMUX2S"  ;
+#INST "BUFGMUX_TXCLK90" LOC = "BUFGMUX3P"  ;
+
+#INST "BUFGMUX_RGMII_0_RXCLK" LOC = "BUFGMUX4S"  ;
+#INST "BUFGMUX_RGMII_1_RXCLK" LOC = "BUFGMUX6S"  ;
+#INST "BUFGMUX_RGMII_2_RXCLK" LOC = "BUFGMUX5S"  ;
+#INST "BUFGMUX_RGMII_3_RXCLK" LOC = "BUFGMUX7S"  ;
+
+
+
+############################################################
+# CPCI interface constraints
+############################################################
+
+#INST "BUFGMUX_CPCI_CLK" LOC = "BUFGMUX0S"  ;
+
+# According to Xilinx Constraint manual, the Xilinx tools will
+# automatically propagate clock constraints through DCMs.
+# We just need to specify the input clocks (from pads)
+
+# CPCI clock (62.5 MHz)
+##NET "cpci_clk" TNM_NET =FFS(*) "cpci_clk" ;
+##TIMESPEC "TS_cpci_clk" = PERIOD "cpci_clk" 16 ns HIGH 50 %;
+
+##INST "cpci_addr<?>"  TNM = "CPCI_ADDR" ;
+##INST "cpci_addr<??>" TNM = "CPCI_ADDR" ;
+##TIMEGRP "CPCI_ADDR" OFFSET = IN 4 ns BEFORE "cpci_clk"  ;
+
+##INST "cpci_data<?>" TNM = "CPCI_DATA"  ;
+##INST "cpci_data<??>" TNM = "CPCI_DATA" ;
+##TIMEGRP "CPCI_DATA" OFFSET = OUT 10 ns AFTER "cpci_clk"  ;
+# corresponding time in CPCI is the P2N2P OFFSET=IN - see CPCI ucf
+
+# Write data (input to us from CPCI) isnt valid until 4ns before clk
+##NET "cpci_data<?>" TNM = "CPCI_WR_DATA"  ;
+##NET "cpci_data<??>" TNM = "CPCI_WR_DATA" ;
+##TIMEGRP "CPCI_WR_DATA" OFFSET = IN 4.0 ns BEFORE "cpci_clk"  ;
+
+#INST "cpci_rd_rdy" TNM = "CPCI_RDY" ;
+#INST "cpci_wr_rdy" TNM = "CPCI_RDY" ;
+##TIMEGRP "CPCI_RDY" OFFSET = OUT 8 ns AFTER "cpci_clk"  ;
+#INST "cpci_rd_wr_L" TNM = "CPCI_REQ" ;
+##INST "cpci_req" TNM = "CPCI_REQ" ;
+##TIMEGRP "CPCI_REQ" OFFSET = IN 4 ns BEFORE "cpci_clk"  ;
+
+#INST "dma_op_code_ack<?>" TNM = "CPCI_DMA_OUT" ;
+#INST "dma_vld_n2c" TNM = "CPCI_DMA_OUT" ;
+#INST "dma_q_nearly_full_n2c" TNM = "CPCI_DMA_OUT" ;
+#TIMEGRP "CPCI_DMA_OUT" OFFSET = OUT 8 ns AFTER "cpci_clk" ;
+
+#INST "dma_op_code_req<?>"  TNM = "CPCI_DMA_IN" ;
+#INST "dma_op_queue_id<?>" TNM = "CPCI_DMA_IN" ;
+#INST "dma_vld_c2n" TNM = "CPCI_DMA_IN" ;
+#INST "dma_q_nearly_full_c2n"  TNM = "CPCI_DMA_IN" ;
+#TIMEGRP "CPCI_DMA_IN" OFFSET = IN 4 ns BEFORE "cpci_clk" ;
+
+#INST "dma_data<?>" TNM = "CPCI_DMA_INOUT" ;
+#INST "dma_data<??>" TNM = "CPCI_DMA_INOUT" ;
+#TIMEGRP "CPCI_DMA_INOUT" OFFSET = IN 4 ns BEFORE "cpci_clk" ;
+#TIMEGRP "CPCI_DMA_INOUT" OFFSET = OUT 7 ns AFTER "cpci_clk" ;
+
+#INST "cpci_dma_data<?>" TNM = "CPCI_DMA_OUT" ;
+#INST "cpci_dma_data<??>" TNM = "CPCI_DMA_OUT" ;
+#INST "cpci_dma_pkt_avail<?>" TNM = "CPCI_DMA_OUT" ;
+#INST "cpci_dma_wr_en" TNM = "CPCI_DMA_OUT" ;
+#TIMEGRP "CPCI_DMA_OUT" OFFSET = OUT 7 ns AFTER "cpci_clk"  ;
+
+#INST "cpci_dma_send<?>" TNM = "CPCI_DMA_IN" ;
+#INST "cpci_dma_nearly_full" TNM = "CPCI_DMA_IN" ;
+#TIMEGRP "CPCI_DMA_IN" OFFSET = IN 6 ns BEFORE "cpci_clk"  ;
+
+
+
+############################################################
+# Core clock constraints
+############################################################
+
+#INST "BUFGMUX_CORE_CLK" LOC = "BUFGMUX1P"  ;
+
+# According to Xilinx COnstraint manual, the Xilinx tools will
+# automatically propagate clock constrainst through DCMs.
+# We just need to specify the input clocks (from pads).
+
+# Main system clock (125 MHz or slower)
+#NET "core_clk_int" TNM_NET = "core_clk_int" ;
+#TIMESPEC "TS_core_clk_int" = PERIOD "core_clk_int" 8 ns HIGH 50 %;
+
+
+
+############################################################
+# SRAM clock constraints
+############################################################
+
+# SRAM clock can be at 62.5 or 125MHz.
+# These are set assuming 125Mhz, so if you should changes these
+# if you use a 62.5MHz SRAM clock.
+
+#INST "sram1_addr<?>" TNM = "SRAM1_OUT" ;
+#INST "sram1_addr<??>" TNM = "SRAM1_OUT" ;
+#INST "sram1_we" TNM = "SRAM1_OUT" ;
+#INST "sram1_bw<?>" TNM = "SRAM1_OUT" ;
+#TIMEGRP "SRAM1_OUT" OFFSET = OUT 4 ns AFTER "core_clk"  ;
+#INST "sram1_data<?>" TNM = "SRAM1_DATA" ;
+#INST "sram1_data<??>" TNM = "SRAM1_DATA" ;
+#TIMEGRP "SRAM1_DATA" OFFSET = IN 4 ns BEFORE "core_clk"  ;
+#TIMEGRP "SRAM1_DATA" OFFSET = OUT 4 ns AFTER "core_clk"  ;
+
+#INST "sram2_addr<?>" TNM = "SRAM2_OUT" ;
+#INST "sram2_addr<??>" TNM = "SRAM2_OUT"  ;
+#INST "sram2_we" TNM = "SRAM2_OUT" ;
+#INST "sram2_bw<?>" TNM = "SRAM2_OUT" ;
+#TIMEGRP "SRAM2_OUT" OFFSET = OUT 4 ns AFTER "core_clk"  ;
+#INST "sram2_data<?>" TNM = "SRAM2_DATA" ;
+#INST "sram2_data<??>" TNM = "SRAM2_DATA" ;
+#TIMEGRP "SRAM2_DATA" OFFSET = IN 4 ns BEFORE "core_clk"  ;
+#TIMEGRP "SRAM2_DATA" OFFSET = OUT 4 ns AFTER "core_clk"  ;
+
+
+##########################  Aurora  Lane Constraints ####################
+
+#Constrain locatation of the registers in the Phase Align Module. This insures
+# correct timing with respect to the MGT's enable comma align signal
+#INST *serial_test/aurora_module_0/aurora_framing_i/aurora_framing_lane_phase_align_i/phase_align_flops_* AREA_GROUP="AURORA_0_PHASE_ALIGN_0_GRP";
+#AREA_GROUP "AURORA_0_PHASE_ALIGN_0_GRP" RANGE=SLICE_X110Y0:SLICE_X111Y1;
+
+#INST *serial_test/aurora_module_1/aurora_framing_i/aurora_framing_lane_phase_align_i/phase_align_flops_* AREA_GROUP="AURORA_1_PHASE_ALIGN_0_GRP";
+#AREA_GROUP "AURORA_1_PHASE_ALIGN_0_GRP" RANGE=SLICE_X122Y0:SLICE_X123Y1;
+
+# loc the MGTs
+#INST *serial_test/aurora_module_0/aurora_framing_i/lane_0_mgt_i LOC=GT_X6Y0;
+#INST *serial_test/aurora_module_1/aurora_framing_i/lane_0_mgt_i LOC=GT_X7Y0;
+
+############################################################
+# Pin assignments
+############################################################
+
+
+#NET "core_clk"        LOC = "D17" | IOSTANDARD = LVCMOS25 ;
+#NET "cpci_addr<0>"    LOC = "F19"  | IOSTANDARD = LVCMOS25 ;
+#NET "cpci_addr<10>"   LOC = "D15"  | IOSTANDARD = LVCMOS25 ;
+#NET "cpci_addr<11>"   LOC = "H14"  | IOSTANDARD = LVCMOS25 ;
+#NET "cpci_addr<12>"   LOC = "G14"  | IOSTANDARD = LVCMOS25 ;
+#NET "cpci_addr<13>"   LOC = "F14"  | IOSTANDARD = LVCMOS25 ;
+#NET "cpci_addr<14>"   LOC = "E14"  | IOSTANDARD = LVCMOS25 ;
+#NET "cpci_addr<15>"   LOC = "D14"  | IOSTANDARD = LVCMOS25 ;
+#NET "cpci_addr<16>"   LOC = "C14"  | IOSTANDARD = LVCMOS25 ;
+#NET "cpci_addr<17>"   LOC = "H13"  | IOSTANDARD = LVCMOS25 ;
+#NET "cpci_addr<18>"   LOC = "G13"  | IOSTANDARD = LVCMOS25 ;
+#NET "cpci_addr<19>"   LOC = "F13"  | IOSTANDARD = LVCMOS25 ;
+#NET "cpci_addr<1>"    LOC = "E19"  | IOSTANDARD = LVCMOS25 ;
+#NET "cpci_addr<20>"   LOC = "E13"  | IOSTANDARD = LVCMOS25 ;
+#NET "cpci_addr<21>"   LOC = "D13"  | IOSTANDARD = LVCMOS25 ;
+#NET "cpci_addr<22>"   LOC = "C13"  | IOSTANDARD = LVCMOS25 ;
+#NET "cpci_addr<23>"   LOC = "D12"  | IOSTANDARD = LVCMOS25 ;
+#NET "cpci_addr<24>"   LOC = "J6"   | IOSTANDARD = LVCMOS25 ;
+#NET "cpci_addr<25>"   LOC = "H1"   | IOSTANDARD = LVCMOS25 ;
+#NET "cpci_addr<26>"   LOC = "J5"   | IOSTANDARD = LVCMOS25 ;
+#NET "cpci_addr<27>"   LOC = "J3"   | IOSTANDARD = LVCMOS25 ;
+#NET "cpci_addr<28>"   LOC = "H4"   | IOSTANDARD = LVCMOS25 ;
+#NET "cpci_addr<29>"   LOC = "H5"   | IOSTANDARD = LVCMOS25 ;
+#NET "cpci_addr<2>"    LOC = "D19"  | IOSTANDARD = LVCMOS25 ;
+#NET "cpci_addr<3>"    LOC = "H16"  | IOSTANDARD = LVCMOS25 ;
+#NET "cpci_addr<30>"   LOC = "H2"   | IOSTANDARD = LVCMOS25 ;
+#NET "cpci_addr<31>"   LOC = "H3"   | IOSTANDARD = LVCMOS25 ;
+#NET "cpci_addr<4>"    LOC = "G16"  | IOSTANDARD = LVCMOS25 ;
+#NET "cpci_addr<5>"    LOC = "F16"  | IOSTANDARD = LVCMOS25 ;
+#NET "cpci_addr<6>"    LOC = "E16"  | IOSTANDARD = LVCMOS25 ;
+#NET "cpci_addr<7>"    LOC = "D16"  | IOSTANDARD = LVCMOS25 ;
+#NET "cpci_addr<8>"    LOC = "G15"  | IOSTANDARD = LVCMOS25 ;
+#NET "cpci_addr<9>"    LOC = "F15"  | IOSTANDARD = LVCMOS25 ;
+#NET "cpci_clk"        LOC = "E17"  | IOSTANDARD = LVCMOS25 ;
+#NET "AD_IO<0>"        LOC = "F28"  | IOSTANDARD = LVCMOS25 ;  ## cpci_data<?>
+#NET "AD_IO<10>"       LOC = "E25"  | IOSTANDARD = LVCMOS25 ;  ## cpci_data<?>
+#NET "AD_IO<11>"       LOC = "D25"  | IOSTANDARD = LVCMOS25 ;  ## cpci_data<?>
+#NET "AD_IO<12>"       LOC = "D24"  | IOSTANDARD = LVCMOS25 ;  ## cpci_data<?>
+#NET "AD_IO<13>"       LOC = "C24"  | IOSTANDARD = LVCMOS25 ;  ## cpci_data<?>
+#NET "AD_IO<14>"       LOC = "D23"  | IOSTANDARD = LVCMOS25 ;  ## cpci_data<?>
+#NET "AD_IO<15>"       LOC = "H22"  | IOSTANDARD = LVCMOS25 ;  ## cpci_data<?>
+#NET "AD_IO<16>"       LOC = "G22"  | IOSTANDARD = LVCMOS25 ;  ## cpci_data<?>
+#NET "AD_IO<17>"       LOC = "F22"  | IOSTANDARD = LVCMOS25 ;  ## cpci_data<?>
+#NET "AD_IO<18>"       LOC = "E22"  | IOSTANDARD = LVCMOS25 ;  ## cpci_data<?>
+#NET "AD_IO<19>"       LOC = "D22"  | IOSTANDARD = LVCMOS25 ;  ## cpci_data<?>
+#NET "AD_IO<1>"        LOC = "F27"  | IOSTANDARD = LVCMOS25 ;  ## cpci_data<?>
+#NET "AD_IO<20>"       LOC = "C22"  | IOSTANDARD = LVCMOS25 ;  ## cpci_data<?>
+#NET "AD_IO<21>"       LOC = "H21"  | IOSTANDARD = LVCMOS25 ;  ## cpci_data<?>
+#NET "AD_IO<22>"       LOC = "G21"  | IOSTANDARD = LVCMOS25 ;  ## cpci_data<?>
+#NET "AD_IO<23>"       LOC = "F21"  | IOSTANDARD = LVCMOS25 ;  ## cpci_data<?>
+#NET "AD_IO<24>"       LOC = "E21"  | IOSTANDARD = LVCMOS25 ;  ## cpci_data<?>
+#NET "AD_IO<25>"       LOC = "D21"  | IOSTANDARD = LVCMOS25 ;  ## cpci_data<?>
+#NET "AD_IO<26>"       LOC = "C21"  | IOSTANDARD = LVCMOS25 ;  ## cpci_data<?>
+#NET "AD_IO<27>"       LOC = "G20"  | IOSTANDARD = LVCMOS25 ;  ## cpci_data<?>
+#NET "AD_IO<28>"       LOC = "F20"  | IOSTANDARD = LVCMOS25 ;  ## cpci_data<?>
+#NET "AD_IO<29>"       LOC = "D20"  | IOSTANDARD = LVCMOS25 ;  ## cpci_data<?>
+#NET "AD_IO<2>"        LOC = "H26"  | IOSTANDARD = LVCMOS25 ;  ## cpci_data<?>
+#NET "AD_IO<30>"       LOC = "H19"  | IOSTANDARD = LVCMOS25 ;  ## cpci_data<?>
+#NET "AD_IO<31>"       LOC = "G19"  | IOSTANDARD = LVCMOS25 ;  ## cpci_data<?>
+#NET "AD_IO<3>"        LOC = "G26"  | IOSTANDARD = LVCMOS25 ;  ## cpci_data<?>
+#NET "AD_IO<4>"        LOC = "F26"  | IOSTANDARD = LVCMOS25 ;  ## cpci_data<?>
+#NET "AD_IO<5>"        LOC = "E26"  | IOSTANDARD = LVCMOS25 ;  ## cpci_data<?>
+#NET "AD_IO<6>"        LOC = "D26"  | IOSTANDARD = LVCMOS25 ;  ## cpci_data<?>
+#NET "AD_IO<7>"        LOC = "C26"  | IOSTANDARD = LVCMOS25 ;  ## cpci_data<?>
+#NET "AD_IO<8>"        LOC = "H25"  | IOSTANDARD = LVCMOS25 ;  ## cpci_data<?>
+#NET "AD_IO<9>"        LOC = "G25"  | IOSTANDARD = LVCMOS25 ;  ## cpci_data<?>
+#NET "PCLK"             LOC = "AL17"   | IOSTANDARD = LVCMOS25 ;  ## cpci_rp_clk
+#NET "PCLK2"            LOC = "E32"    | IOSTANDARD = LVCMOS25 ;  ## cpci_wr_rdy
+#NET "cpci_rp_din"      LOC = "AL14"   | IOSTANDARD = LVCMOS25 ;
+#NET "cpci_rp_done"     LOC = "AK16"   | IOSTANDARD = LVCMOS25 ;
+#NET "cpci_rp_en"       LOC = "AJ16"   | IOSTANDARD = LVCMOS25 ;
+#NET "cpci_rp_init_b"   LOC = "AL16"   | IOSTANDARD = LVCMOS25 ;
+#NET "cpci_rp_prog_b"   LOC = "AL15"   | IOSTANDARD = LVCMOS25 ;
+#NET "AD_HIZ"           LOC = "C11"  | IOSTANDARD = LVCMOS25 ;  ## cpci_dma_data<0>
+#NET "CBE_IO<0>"        LOC = "H10"  | IOSTANDARD = LVCMOS25 ;  ## cpci_dma_data<1>
+#NET "CBE_IO<1>"        LOC = "G10"  | IOSTANDARD = LVCMOS25 ;  ## cpci_dma_data<2>
+#NET "CBE_IO<2>"        LOC = "E10"  | IOSTANDARD = LVCMOS25 ;  ## cpci_dma_data<3>
+#NET "CBE_IO<3>"        LOC = "D10"  | IOSTANDARD = LVCMOS25 ;  ## cpci_dma_data<4>
+#NET "CBE_HIZ"          LOC = "G9"   | IOSTANDARD = LVCMOS25 ;  ## cpci_dma_data<5>
+#NET "PAR_IO"           LOC = "F9"   | IOSTANDARD = LVCMOS25 ;  ## cpci_dma_data<6>
+#NET "PAR_HIZ"          LOC = "E9"   | IOSTANDARD = LVCMOS25 ;  ## cpci_dma_data<7>
+#NET "FRAME_IO"         LOC = "D9"   | IOSTANDARD = LVCMOS25 ;  ## cpci_dma_data<8>
+#NET "FRAME_HIZ"        LOC = "C9"   | IOSTANDARD = LVCMOS25 ;  ## cpci_dma_data<9>
+#NET "TRDY_IO"          LOC = "F8"   | IOSTANDARD = LVCMOS25 ;  ## cpci_dma_data<10>
+#NET "TRDY_HIZ"         LOC = "F7"   | IOSTANDARD = LVCMOS25 ;  ## cpci_dma_data<11>
+#NET "IRDY_IO"          LOC = "E7"   | IOSTANDARD = LVCMOS25 ;  ## cpci_dma_data<12>
+#NET "IRDY_HIZ"         LOC = "E6"   | IOSTANDARD = LVCMOS25 ;  ## cpci_dma_data<13>
+#NET "STOP_IO"          LOC = "D6"   | IOSTANDARD = LVCMOS25 ;  ## cpci_dma_data<14>
+#NET "STOP_HIZ"         LOC = "D5"   | IOSTANDARD = LVCMOS25 ;  ## cpci_dma_data<15>
+#NET "DEVSEL_IO"        LOC = "D2"   | IOSTANDARD = LVCMOS25 ;  ## cpci_dma_data<16>
+#NET "DEVSEL_HIZ"       LOC = "D1"   | IOSTANDARD = LVCMOS25 ;  ## cpci_dma_data<17>
+#NET "IDSEL_I"          LOC = "E4"   | IOSTANDARD = LVCMOS25 ;  ## cpci_dma_data<18>
+#NET "INTA_O"           LOC = "E3"   | IOSTANDARD = LVCMOS25 ;  ## cpci_dma_data<19>
+#NET "PERR_IO"          LOC = "E2"   | IOSTANDARD = LVCMOS25 ;  ## cpci_dma_data<20>
+#NET "PERR_HIZ"         LOC = "E1"   | IOSTANDARD = LVCMOS25 ;  ## cpci_dma_data<21>
+#NET "SERR_IO"          LOC = "F5"   | IOSTANDARD = LVCMOS25 ;  ## cpci_dma_data<22>
+#NET "SERR_HIZ"         LOC = "F4"   | IOSTANDARD = LVCMOS25 ;  ## cpci_dma_data<23>
+#NET "REQ_O"            LOC = "F2"   | IOSTANDARD = LVCMOS25 ;  ## cpci_dma_data<24>
+#NET "GNT_I"            LOC = "F1"   | IOSTANDARD = LVCMOS25 ;  ## cpci_dma_data<25>
+#NET "cpci_id<0>"       LOC = "G6"   | IOSTANDARD = LVCMOS25 ;  ## cpci_dma_data<26>
+#NET "cpci_id<1>"       LOC = "G5"   | IOSTANDARD = LVCMOS25 ;  ## cpci_dma_data<27>
+#NET "cpci_id<2>"       LOC = "G4"   | IOSTANDARD = LVCMOS25 ;  ## cpci_dma_data<28>
+#NET "cpci_id<3>"       LOC = "G3"   | IOSTANDARD = LVCMOS25 ;  ## cpci_dma_data<29>
+#NET "PASS_REQ"         LOC = "G2"   | IOSTANDARD = LVCMOS25 ;  ## cpci_dma_data<30>
+#NET "PASS_READY"       LOC = "G1"   | IOSTANDARD = LVCMOS25 ;  ## cpci_dma_data<31>
+
+#NET "cpci_debug_data<0>"    LOC = "T2"   | IOSTANDARD = LVCMOS25 ;
+#NET "cpci_debug_data<10>"   LOC = "T3"   | IOSTANDARD = LVCMOS25 ;
+#NET "cpci_debug_data<11>"   LOC = "T4"   | IOSTANDARD = LVCMOS25 ;
+#NET "cpci_debug_data<12>"   LOC = "T5"   | IOSTANDARD = LVCMOS25 ;
+#NET "cpci_debug_data<13>"   LOC = "T6"   | IOSTANDARD = LVCMOS25 ;
+#NET "cpci_debug_data<14>"   LOC = "R1"   | IOSTANDARD = LVCMOS25 ;
+#NET "cpci_debug_data<15>"   LOC = "R2"   | IOSTANDARD = LVCMOS25 ;
+#NET "cpci_debug_data<16>"   LOC = "R3"   | IOSTANDARD = LVCMOS25 ;
+#NET "cpci_debug_data<17>"   LOC = "R4"   | IOSTANDARD = LVCMOS25 ;
+#NET "cpci_debug_data<18>"   LOC = "R6"   | IOSTANDARD = LVCMOS25 ;
+#NET "cpci_debug_data<19>"   LOC = "P1"   | IOSTANDARD = LVCMOS25 ;
+#NET "cpci_debug_data<1>"    LOC = "P2"   | IOSTANDARD = LVCMOS25 ;
+#NET "cpci_debug_data<20>"   LOC = "P3"   | IOSTANDARD = LVCMOS25 ;
+#NET "cpci_debug_data<21>"   LOC = "P4"   | IOSTANDARD = LVCMOS25 ;
+#NET "cpci_debug_data<22>"   LOC = "P5"   | IOSTANDARD = LVCMOS25 ;
+#NET "cpci_debug_data<23>"   LOC = "P6"   | IOSTANDARD = LVCMOS25 ;
+#NET "cpci_debug_data<24>"   LOC = "N1"   | IOSTANDARD = LVCMOS25 ;
+#NET "cpci_debug_data<25>"   LOC = "N2"   | IOSTANDARD = LVCMOS25 ;
+#NET "cpci_debug_data<26>"   LOC = "N3"   | IOSTANDARD = LVCMOS25 ;
+#NET "cpci_debug_data<27>"   LOC = "N4"   | IOSTANDARD = LVCMOS25 ;
+#NET "cpci_debug_data<28>"   LOC = "N5"   | IOSTANDARD = LVCMOS25 ;
+#NET "cpci_debug_data<29>"   LOC = "N6"   | IOSTANDARD = LVCMOS25 ;
+#NET "cpci_debug_data<2>"    LOC = "M1"   | IOSTANDARD = LVCMOS25 ;
+#NET "cpci_debug_data<30>"   LOC = "M2"   | IOSTANDARD = LVCMOS25 ;
+#NET "cpci_debug_data<31>"   LOC = "M3"   | IOSTANDARD = LVCMOS25 ;
+#NET "cpci_debug_data<3>"    LOC = "M4"   | IOSTANDARD = LVCMOS25 ;
+#NET "cpci_debug_data<4>"    LOC = "M6"   | IOSTANDARD = LVCMOS25 ;
+#NET "cpci_debug_data<5>"    LOC = "L1"   | IOSTANDARD = LVCMOS25 ;
+#NET "cpci_debug_data<6>"    LOC = "L2"   | IOSTANDARD = LVCMOS25 ;
+#NET "cpci_debug_data<7>"    LOC = "L3"   | IOSTANDARD = LVCMOS25 ;
+#NET "cpci_debug_data<8>"    LOC = "L4"   | IOSTANDARD = LVCMOS25 ;
+#NET "cpci_debug_data<9>"    LOC = "L5"   | IOSTANDARD = LVCMOS25 ;
+
+#NET "LED"              LOC = "AL10" | IOSTANDARD = LVCMOS25 ;
+NET "gtx_clk"          LOC = "J17"  | IOSTANDARD = LVCMOS25 | SLEW = FAST;
+NET "cpci_reset"       LOC = "J4"   | IOSTANDARD = LVCMOS25 ;  ## cpci_reset
+#NET "phy_mdc"          LOC = "AL34" | IOSTANDARD = LVCMOS25 ;
+#NET "phy_mdio"         LOC = "AL33" | IOSTANDARD = LVCMOS25 ;
+
+NET "rgmii_0_rx_ctl"  LOC = "AK25" | IOSTANDARD = LVCMOS25 | SLEW = FAST;
+NET "rgmii_0_rxc"     LOC = "H18"  | IOSTANDARD = LVCMOS25 | SLEW = FAST;
+NET "rgmii_0_rxd<0>"  LOC = "AL26" | IOSTANDARD = LVCMOS25 | SLEW = FAST;
+NET "rgmii_0_rxd<1>"  LOC = "AM26" | IOSTANDARD = LVCMOS25 | SLEW = FAST;
+NET "rgmii_0_rxd<2>"  LOC = "AJ26" | IOSTANDARD = LVCMOS25 | SLEW = FAST;
+NET "rgmii_0_rxd<3>"  LOC = "AK26" | IOSTANDARD = LVCMOS25 | SLEW = FAST;
+NET "rgmii_0_tx_ctl"  LOC = "AG25" | IOSTANDARD = LVCMOS25 | SLEW = FAST;
+NET "rgmii_0_txc"     LOC = "AF25" | IOSTANDARD = LVCMOS25 | SLEW = FAST;
+NET "rgmii_0_txd<0>"  LOC = "AL28" | IOSTANDARD = LVCMOS25 | SLEW = FAST;
+NET "rgmii_0_txd<1>"  LOC = "AM28" | IOSTANDARD = LVCMOS25 | SLEW = FAST;
+NET "rgmii_0_txd<2>"  LOC = "AE24" | IOSTANDARD = LVCMOS25 | SLEW = FAST;
+NET "rgmii_0_txd<3>"  LOC = "AF24" | IOSTANDARD = LVCMOS25 | SLEW = FAST;
+NET "rgmii_1_rx_ctl"  LOC = "AG22" | IOSTANDARD = LVCMOS25 | SLEW = FAST;
+NET "rgmii_1_rxc"     LOC = "D18"  | IOSTANDARD = LVCMOS25 | SLEW = FAST;
+NET "rgmii_1_rxd<0>"  LOC = "AK27" | IOSTANDARD = LVCMOS25 | SLEW = FAST;
+NET "rgmii_1_rxd<1>"  LOC = "AL27" | IOSTANDARD = LVCMOS25 | SLEW = FAST;
+NET "rgmii_1_rxd<2>"  LOC = "AG24" | IOSTANDARD = LVCMOS25 | SLEW = FAST;
+NET "rgmii_1_rxd<3>"  LOC = "AH24" | IOSTANDARD = LVCMOS25 | SLEW = FAST;
+NET "rgmii_1_tx_ctl"  LOC = "AL24" | IOSTANDARD = LVCMOS25 | SLEW = FAST;
+NET "rgmii_1_txc"     LOC = "AJ24" | IOSTANDARD = LVCMOS25 | SLEW = FAST;
+NET "rgmii_1_txd<0>"  LOC = "AE22" | IOSTANDARD = LVCMOS25 | SLEW = FAST;
+NET "rgmii_1_txd<1>"  LOC = "AF22" | IOSTANDARD = LVCMOS25 | SLEW = FAST;
+NET "rgmii_1_txd<2>"  LOC = "AJ22" | IOSTANDARD = LVCMOS25 | SLEW = FAST;
+NET "rgmii_1_txd<3>"  LOC = "AK22" | IOSTANDARD = LVCMOS25 | SLEW = FAST;
+NET "rgmii_2_rx_ctl"  LOC = "AL22" | IOSTANDARD = LVCMOS25 | SLEW = FAST;
+NET "rgmii_2_rxc"     LOC = "AJ18" | IOSTANDARD = LVCMOS25 | SLEW = FAST;
+NET "rgmii_2_rxd<0>"  LOC = "AE20" | IOSTANDARD = LVCMOS25 | SLEW = FAST;
+NET "rgmii_2_rxd<1>"  LOC = "AF20" | IOSTANDARD = LVCMOS25 | SLEW = FAST;
+NET "rgmii_2_rxd<2>"  LOC = "AH23" | IOSTANDARD = LVCMOS25 | SLEW = FAST;
+NET "rgmii_2_rxd<3>"  LOC = "AJ23" | IOSTANDARD = LVCMOS25 | SLEW = FAST;
+NET "rgmii_2_tx_ctl"  LOC = "AM22" | IOSTANDARD = LVCMOS25 | SLEW = FAST;
+NET "rgmii_2_txc"     LOC = "AJ21" | IOSTANDARD = LVCMOS25 | SLEW = FAST;
+NET "rgmii_2_txd<0>"  LOC = "AG21" | IOSTANDARD = LVCMOS25 | SLEW = FAST;
+NET "rgmii_2_txd<1>"  LOC = "AH21" | IOSTANDARD = LVCMOS25 | SLEW = FAST;
+NET "rgmii_2_txd<2>"  LOC = "AK21" | IOSTANDARD = LVCMOS25 | SLEW = FAST;
+NET "rgmii_2_txd<3>"  LOC = "AM21" | IOSTANDARD = LVCMOS25 | SLEW = FAST;
+NET "rgmii_3_rx_ctl"  LOC = "AK14" | IOSTANDARD = LVCMOS25 | SLEW = FAST;
+NET "rgmii_3_rxc"     LOC = "AL18" | IOSTANDARD = LVCMOS25 | SLEW = FAST;
+NET "rgmii_3_rxd<0>"  LOC = "AF19" | IOSTANDARD = LVCMOS25 | SLEW = FAST;
+NET "rgmii_3_rxd<1>"  LOC = "AG19" | IOSTANDARD = LVCMOS25 | SLEW = FAST;
+NET "rgmii_3_rxd<2>"  LOC = "AH20" | IOSTANDARD = LVCMOS25 | SLEW = FAST;
+NET "rgmii_3_rxd<3>"  LOC = "AJ20" | IOSTANDARD = LVCMOS25 | SLEW = FAST;
+NET "rgmii_3_tx_ctl"  LOC = "AF18" | IOSTANDARD = LVCMOS25 | SLEW = FAST;
+NET "rgmii_3_txc"     LOC = "AL21" | IOSTANDARD = LVCMOS25 | SLEW = FAST;
+NET "rgmii_3_txd<0>"  LOC = "AH19" | IOSTANDARD = LVCMOS25 | SLEW = FAST;
+NET "rgmii_3_txd<1>"  LOC = "AJ19" | IOSTANDARD = LVCMOS25 | SLEW = FAST;
+NET "rgmii_3_txd<2>"  LOC = "AK19" | IOSTANDARD = LVCMOS25 | SLEW = FAST;
+NET "rgmii_3_txd<3>"  LOC = "AL19" | IOSTANDARD = LVCMOS25 | SLEW = FAST;
+
+#NET "sram1_addr<0>"    LOC = "AF29"  | IOSTANDARD = LVCMOS25 ;
+#NET "sram1_addr<10>"   LOC = "AC32"  | IOSTANDARD = LVCMOS25 ;
+#NET "sram1_addr<11>"   LOC = "AB30"  | IOSTANDARD = LVCMOS25 ;
+#NET "sram1_addr<12>"   LOC = "AC31"  | IOSTANDARD = LVCMOS25 ;
+#NET "sram1_addr<13>"   LOC = "AC33"  | IOSTANDARD = LVCMOS25 ;
+#NET "sram1_addr<14>"   LOC = "AC29"  | IOSTANDARD = LVCMOS25 ;
+#NET "sram1_addr<15>"   LOC = "AD30"  | IOSTANDARD = LVCMOS25 ;
+#NET "sram1_addr<16>"   LOC = "AD31"  | IOSTANDARD = LVCMOS25 ;
+#NET "sram1_addr<17>"   LOC = "AD32"  | IOSTANDARD = LVCMOS25 ;
+#NET "sram1_addr<18>"   LOC = "AD33"  | IOSTANDARD = LVCMOS25 ;
+#NET "sram1_addr<1>"    LOC = "AF30"  | IOSTANDARD = LVCMOS25 ;
+#NET "sram1_addr<2>"    LOC = "AF31"  | IOSTANDARD = LVCMOS25 ;
+#NET "sram1_addr<3>"    LOC = "AF32"  | IOSTANDARD = LVCMOS25 ;
+#NET "sram1_addr<4>"    LOC = "AF33"  | IOSTANDARD = LVCMOS25 ;
+#NET "sram1_addr<5>"    LOC = "AG29"  | IOSTANDARD = LVCMOS25 ;
+#NET "sram1_addr<6>"    LOC = "AG30"  | IOSTANDARD = LVCMOS25 ;
+#NET "sram1_addr<7>"    LOC = "AG31"  | IOSTANDARD = LVCMOS25 ;
+#NET "sram1_addr<8>"    LOC = "AD29"  | IOSTANDARD = LVCMOS25 ;
+#NET "sram1_addr<9>"    LOC = "AC34"  | IOSTANDARD = LVCMOS25 ;
+#NET "sram1_addr<19>"    LOC = "AD34"  | IOSTANDARD = LVCMOS25 ;
+#NET "sram1_bw<0>"      LOC = "AE31"  | IOSTANDARD = LVCMOS25 ;
+#NET "sram1_bw<1>"      LOC = "AE33"  | IOSTANDARD = LVCMOS25 ;
+#NET "sram1_bw<2>"      LOC = "AE34"  | IOSTANDARD = LVCMOS25 ;
+#NET "sram1_bw<3>"      LOC = "AF28"  | IOSTANDARD = LVCMOS25 ;
+#NET "sram1_data<0>"    LOC = "Y34"  | IOSTANDARD = LVCMOS25 ;
+#NET "sram1_data<10>"   LOC = "AA31"  | IOSTANDARD = LVCMOS25 ;
+#NET "sram1_data<11>"   LOC = "AA32"  | IOSTANDARD = LVCMOS25 ;
+#NET "sram1_data<12>"   LOC = "AA33"  | IOSTANDARD = LVCMOS25 ;
+#NET "sram1_data<13>"   LOC = "AA34"  | IOSTANDARD = LVCMOS25 ;
+#NET "sram1_data<14>"   LOC = "AB31"  | IOSTANDARD = LVCMOS25 ;
+#NET "sram1_data<15>"   LOC = "AB32"  | IOSTANDARD = LVCMOS25 ;
+#NET "sram1_data<16>"   LOC = "AB33"  | IOSTANDARD = LVCMOS25 ;
+#NET "sram1_data<17>"   LOC = "AB34"  | IOSTANDARD = LVCMOS25 ;
+#NET "sram1_data<18>"   LOC = "AG32"  | IOSTANDARD = LVCMOS25 ;
+#NET "sram1_data<19>"   LOC = "AH29"  | IOSTANDARD = LVCMOS25 ;
+#NET "sram1_data<1>"    LOC = "Y33"  | IOSTANDARD = LVCMOS25 ;
+#NET "sram1_data<20>"   LOC = "AH30"  | IOSTANDARD = LVCMOS25 ;
+#NET "sram1_data<21>"   LOC = "AH31"  | IOSTANDARD = LVCMOS25 ;
+#NET "sram1_data<22>"   LOC = "AH32"  | IOSTANDARD = LVCMOS25 ;
+#NET "sram1_data<23>"   LOC = "AH33"  | IOSTANDARD = LVCMOS25 ;
+#NET "sram1_data<24>"   LOC = "AH34"  | IOSTANDARD = LVCMOS25 ;
+#NET "sram1_data<25>"   LOC = "AG33"  | IOSTANDARD = LVCMOS25 ;
+#NET "sram1_data<26>"   LOC = "AG34"  | IOSTANDARD = LVCMOS25 ;
+#NET "sram1_data<27>"   LOC = "AJ28"  | IOSTANDARD = LVCMOS25 ;
+#NET "sram1_data<28>"   LOC = "AJ30"  | IOSTANDARD = LVCMOS25 ;
+#NET "sram1_data<29>"   LOC = "AJ31"  | IOSTANDARD = LVCMOS25 ;
+#NET "sram1_data<2>"    LOC = "Y32"  | IOSTANDARD = LVCMOS25 ;
+#NET "sram1_data<30>"   LOC = "AJ33"  | IOSTANDARD = LVCMOS25 ;
+#NET "sram1_data<31>"   LOC = "AJ34"  | IOSTANDARD = LVCMOS25 ;
+#NET "sram1_data<32>"   LOC = "AK31"  | IOSTANDARD = LVCMOS25 ;
+#NET "sram1_data<33>"   LOC = "AK32"  | IOSTANDARD = LVCMOS25 ;
+#NET "sram1_data<34>"   LOC = "AK33"  | IOSTANDARD = LVCMOS25 ;
+#NET "sram1_data<35>"   LOC = "AK34"  | IOSTANDARD = LVCMOS25 ;
+#NET "sram1_data<3>"    LOC = "Y31"  | IOSTANDARD = LVCMOS25 ;
+#NET "sram1_data<4>"    LOC = "W33"  | IOSTANDARD = LVCMOS25 ;
+#NET "sram1_data<5>"    LOC = "W32"  | IOSTANDARD = LVCMOS25 ;
+#NET "sram1_data<6>"    LOC = "W31"  | IOSTANDARD = LVCMOS25 ;
+#NET "sram1_data<7>"    LOC = "W30"  | IOSTANDARD = LVCMOS25 ;
+#NET "sram1_data<8>"    LOC = "W29"  | IOSTANDARD = LVCMOS25 ;
+#NET "sram1_data<9>"    LOC = "AA30"  | IOSTANDARD = LVCMOS25 ;
+#NET "sram1_we"         LOC = "AE28"  | IOSTANDARD = LVCMOS25 ;
+#NET "sram1_zz"         LOC = "AE30"  | IOSTANDARD = LVCMOS25 ;
+#NET "sram2_addr<0>"    LOC = "P32"  | IOSTANDARD = LVCMOS25 ;
+#NET "sram2_addr<10>"   LOC = "M28"  | IOSTANDARD = LVCMOS25 ;
+#NET "sram2_addr<11>"   LOC = "L34"  | IOSTANDARD = LVCMOS25 ;
+#NET "sram2_addr<12>"   LOC = "L33"  | IOSTANDARD = LVCMOS25 ;
+#NET "sram2_addr<13>"   LOC = "M29"  | IOSTANDARD = LVCMOS25 ;
+#NET "sram2_addr<14>"   LOC = "M32"  | IOSTANDARD = LVCMOS25 ;
+#NET "sram2_addr<15>"   LOC = "M34"  | IOSTANDARD = LVCMOS25 ;
+#NET "sram2_addr<16>"   LOC = "N29"  | IOSTANDARD = LVCMOS25 ;
+#NET "sram2_addr<17>"   LOC = "N30"  | IOSTANDARD = LVCMOS25 ;
+#NET "sram2_addr<18>"   LOC = "N31"  | IOSTANDARD = LVCMOS25 ;
+#NET "sram2_addr<1>"    LOC = "P33"  | IOSTANDARD = LVCMOS25 ;
+#NET "sram2_addr<2>"    LOC = "P34"  | IOSTANDARD = LVCMOS25 ;
+#NET "sram2_addr<3>"    LOC = "R28"  | IOSTANDARD = LVCMOS25 ;
+#NET "sram2_addr<4>"    LOC = "R29"  | IOSTANDARD = LVCMOS25 ;
+#NET "sram2_addr<5>"    LOC = "R31"  | IOSTANDARD = LVCMOS25 ;
+#NET "sram2_addr<6>"    LOC = "R33"  | IOSTANDARD = LVCMOS25 ;
+#NET "sram2_addr<7>"    LOC = "R32"  | IOSTANDARD = LVCMOS25 ;
+#NET "sram2_addr<8>"    LOC = "M33"  | IOSTANDARD = LVCMOS25 ;
+#NET "sram2_addr<9>"    LOC = "M31"  | IOSTANDARD = LVCMOS25 ;
+#NET "sram2_addr<19>"    LOC = "N32"  | IOSTANDARD = LVCMOS25 ;
+#NET "sram2_bw<0>"      LOC = "N34"  | IOSTANDARD = LVCMOS25 ;
+#NET "sram2_bw<1>"      LOC = "P28"  | IOSTANDARD = LVCMOS25 ;
+#NET "sram2_bw<2>"      LOC = "P29"  | IOSTANDARD = LVCMOS25 ;
+#NET "sram2_bw<3>"      LOC = "P30"  | IOSTANDARD = LVCMOS25 ;
+#NET "sram2_data<0>"    LOC = "J33"  | IOSTANDARD = LVCMOS25 ;
+#NET "sram2_data<10>"   LOC = "K30"  | IOSTANDARD = LVCMOS25 ;
+#NET "sram2_data<11>"   LOC = "K31"  | IOSTANDARD = LVCMOS25 ;
+#NET "sram2_data<12>"   LOC = "K33"  | IOSTANDARD = LVCMOS25 ;
+#NET "sram2_data<13>"   LOC = "K34"  | IOSTANDARD = LVCMOS25 ;
+#NET "sram2_data<14>"   LOC = "L29"  | IOSTANDARD = LVCMOS25 ;
+#NET "sram2_data<15>"   LOC = "L30"  | IOSTANDARD = LVCMOS25 ;
+#NET "sram2_data<16>"   LOC = "L31"  | IOSTANDARD = LVCMOS25 ;
+#NET "sram2_data<17>"   LOC = "L32"  | IOSTANDARD = LVCMOS25 ;
+#NET "sram2_data<18>"   LOC = "U29"  | IOSTANDARD = LVCMOS25 ;
+#NET "sram2_data<19>"   LOC = "U28"  | IOSTANDARD = LVCMOS25 ;
+#NET "sram2_data<1>"    LOC = "J32"  | IOSTANDARD = LVCMOS25 ;
+#NET "sram2_data<20>"   LOC = "T33"  | IOSTANDARD = LVCMOS25 ;
+#NET "sram2_data<21>"   LOC = "T32"  | IOSTANDARD = LVCMOS25 ;
+#NET "sram2_data<22>"   LOC = "T31"  | IOSTANDARD = LVCMOS25 ;
+#NET "sram2_data<23>"   LOC = "T30"  | IOSTANDARD = LVCMOS25 ;
+#NET "sram2_data<24>"   LOC = "T29"  | IOSTANDARD = LVCMOS25 ;
+#NET "sram2_data<25>"   LOC = "T28"  | IOSTANDARD = LVCMOS25 ;
+#NET "sram2_data<26>"   LOC = "R34"  | IOSTANDARD = LVCMOS25 ;
+#NET "sram2_data<27>"   LOC = "U30"  | IOSTANDARD = LVCMOS25 ;
+#NET "sram2_data<28>"   LOC = "U31"  | IOSTANDARD = LVCMOS25 ;
+#NET "sram2_data<29>"   LOC = "U32"  | IOSTANDARD = LVCMOS25 ;
+#NET "sram2_data<2>"    LOC = "J31"  | IOSTANDARD = LVCMOS25 ;
+#NET "sram2_data<30>"   LOC = "U33"  | IOSTANDARD = LVCMOS25 ;
+#NET "sram2_data<31>"   LOC = "V29"  | IOSTANDARD = LVCMOS25 ;
+#NET "sram2_data<32>"   LOC = "V30"  | IOSTANDARD = LVCMOS25 ;
+#NET "sram2_data<33>"   LOC = "V31"  | IOSTANDARD = LVCMOS25 ;
+#NET "sram2_data<34>"   LOC = "V32"  | IOSTANDARD = LVCMOS25 ;
+#NET "sram2_data<35>"   LOC = "V33"  | IOSTANDARD = LVCMOS25 ;
+#NET "sram2_data<3>"    LOC = "H32"  | IOSTANDARD = LVCMOS25 ;
+#NET "sram2_data<4>"    LOC = "H31"  | IOSTANDARD = LVCMOS25 ;
+#NET "sram2_data<5>"    LOC = "G34"  | IOSTANDARD = LVCMOS25 ;
+#NET "sram2_data<6>"    LOC = "G33"  | IOSTANDARD = LVCMOS25 ;
+#NET "sram2_data<7>"    LOC = "G32"  | IOSTANDARD = LVCMOS25 ;
+#NET "sram2_data<8>"    LOC = "G31"  | IOSTANDARD = LVCMOS25 ;
+#NET "sram2_data<9>"    LOC = "H33"  | IOSTANDARD = LVCMOS25 ;
+#NET "sram2_we"         LOC = "N33"  | IOSTANDARD = LVCMOS25 ;
+#NET "sram2_zz"         LOC = "P31"  | IOSTANDARD = LVCMOS25 ;
+
+# Prohibit these to reserve them for the Prog interface
+
+#CONFIG PROHIBIT = "AL6" ;
+#CONFIG PROHIBIT = "AG9" ;
+#CONFIG PROHIBIT = "AH9" ;
+#CONFIG PROHIBIT = "AK6" ;
+#CONFIG PROHIBIT = "AK7" ;
+#CONFIG PROHIBIT = "AK28" ;
+#CONFIG PROHIBIT = "AK29" ;
+#CONFIG PROHIBIT = "AH26" ;
+#CONFIG PROHIBIT = "AG26" ;
+#CONFIG PROHIBIT = "AL29" ;
+#CONFIG PROHIBIT = "AL30" ;
+
+# These are used for the parallel programming interface:
+# PAD428      X138Y0      AL6      4      INIT_B       RP_INIT_B
+# PAD429      X138Y0      AG9      4      D0           RP_DATA0
+# PAD430      X138Y0      AH9      4      D1           RP_DATA1
+# PAD431      X136Y0      AK6      4      D2           RP_DATA2
+# PAD432      X136Y0      AK7      4      D3           RP_DATA3
+# PAD583      X2Y0        AK28     5      D4           RP_DATA4
+# PAD584      X2Y0        AK29     5      D5           RP_DATA5
+# PAD585      X0Y0        AH26     5      D6           RP_DATA6
+# PAD586      X0Y0        AG26     5      D7           RP_DATA7
+# PAD587      X0Y0        AL29     5      RDWR_B       RP_RDWR_B
+# PAD588      X0Y0        AL30     5      CS_B         RP_CS_B
