@@ -1,169 +1,482 @@
-`default_nettype none
-`define ECP3VERSA
+//`timescale 1ns / 1ps
+`include "../rtl/setup.v"
 
-module system (
-	  input        clock
-  , input        reset_n
-// PHY0
-  , output       phy0_rstn
-  , input        phy0_rx_clk      // MII 25MHz
-  , input        phy0_rx_er
-  , input        phy0_rx_dv
-  , input  [7:0] phy0_rxd
-  , input        phy0_tx_clk      // MII 25MHz
-  , output       phy0_tx_en
-  , output [7:0] phy0_txd
-  , output       phy0_gtx_clk     // GMII 125MHz
-  , input        phy0_125M_clk
-  , output       phy0_mii_clk
-  , output       phy0_mii_data
-// PHY1
-  , output       phy1_rstn
-  , input        phy1_rx_clk
-  , input        phy1_rx_er
-  , input        phy1_rx_dv
-  , input  [7:0] phy1_rxd
-  , input        phy1_tx_clk
-  , output       phy1_tx_en
-  , output [7:0] phy1_txd
-  , output       phy1_gtx_clk
-  , input        phy1_125M_clk
-  , output       phy1_mii_clk
-  , output       phy1_mii_data
-// Switch and LED
-  //, input  [7:0]  switch
-  //, output [14:0] segled
-  , output [7:0]  led
+module system # (
+	parameter MaxPort = 2'h3
+) (
+	input         sys_rst,
+	input         sys_clk,
+
+	input         gmii_tx_clk,
+
+	// GMII interfaces for 4 MACs
+	output [7:0]  gmii_0_txd,
+	output        gmii_0_tx_en,
+	input  [7:0]  gmii_0_rxd,
+	input         gmii_0_rx_dv,
+	input         gmii_0_rx_clk,
+
+	output [7:0]  gmii_1_txd,
+	output        gmii_1_tx_en,
+	input  [7:0]  gmii_1_rxd,
+	input         gmii_1_rx_dv,
+	input         gmii_1_rx_clk,
+
+	output [7:0]  gmii_2_txd,
+	output        gmii_2_tx_en,
+	input  [7:0]  gmii_2_rxd,
+	input         gmii_2_rx_dv,
+	input         gmii_2_rx_clk,
+
+	output [7:0]  gmii_3_txd,
+	output        gmii_3_tx_en,
+	input  [7:0]  gmii_3_rxd,
+	input         gmii_3_rx_dv,
+	input         gmii_3_rx_clk
+
 );
 
-wire   phy0_25M_clk  = phy0_tx_clk;
-wire   phy1_25M_clk  = phy1_tx_clk;
-assign phy0_mii_clk  = 1'b0;
-assign phy0_mii_data = 1'b0;
-assign phy1_mii_clk  = 1'b0;
-assign phy1_mii_data = 1'b0;
+//-----------------------------------
+// RX0,RX1,RX2,RX3_PHYQ FIFO
+//-----------------------------------
+wire [8:0] rx0_phyq_din, rx0_phyq_dout;
+wire rx0_phyq_full, rx0_phyq_wr_en;
+wire rx0_phyq_empty, rx0_phyq_rd_en;
 
+wire [8:0] rx1_phyq_din, rx1_phyq_dout;
+wire rx1_phyq_full, rx1_phyq_wr_en;
+wire rx1_phyq_empty, rx1_phyq_rd_en;
 
-/* --------------------------------------- */
-/* base clock (125MHz) */
-wire sys_clk = phy0_125M_clk;
+wire [8:0] rx2_phyq_din, rx2_phyq_dout;
+wire rx2_phyq_full, rx2_phyq_wr_en;
+wire rx2_phyq_empty, rx2_phyq_rd_en;
 
-/* --------------------------------------- */
-/* system reset and initial cold reset */
+wire [8:0] rx3_phyq_din, rx3_phyq_dout;
+wire rx3_phyq_full, rx3_phyq_wr_en;
+wire rx3_phyq_empty, rx3_phyq_rd_en;
+
 `ifndef SIMULATION
-reg       sys_rstn;                  // sys reset
-reg[19:0] rstn_cnt;
-always @(posedge sys_clk or negedge reset_n) begin
-  if (!reset_n) begin
-    rstn_cnt <= 20'b0;
-    sys_rstn <= 1'b0;
-  end else begin
-    if (rstn_cnt[19])
-      sys_rstn <= 1'b1;
-    else
-      rstn_cnt <= rstn_cnt + 20'b1;
-  end
-end
-wire sys_rst = ~sys_rstn;
+asfifo9_12 rx0_phyq (
+	.din(rx0_phyq_din),
+	.full(rx0_phyq_full),
+	.wr_en(rx0_phyq_wr_en),
+	.wr_clk(gmii_0_rx_clk),
 
-assign phy0_rstn = sys_rstn;
-assign phy1_rstn = sys_rstn;
+	.dout(rx0_phyq_dout),
+	.empty(rx0_phyq_empty),
+	.rd_en(rx0_phyq_rd_en),
+	.rd_clk(sys_clk),
+
+	.rst(sys_rst)
+);
+asfifo9_12 rx1_phyq (
+	.din(rx1_phyq_din),
+	.full(rx1_phyq_full),
+	.wr_en(rx1_phyq_wr_en),
+	.wr_clk(gmii_1_rx_clk),
+
+	.dout(rx1_phyq_dout),
+	.empty(rx1_phyq_empty),
+	.rd_en(rx1_phyq_rd_en),
+	.rd_clk(sys_clk),
+
+	.rst(sys_rst)
+);
+`ifdef ENABLE_RGMII2
+asfifo9_12 rx2_phyq (
+	.din(rx2_phyq_din),
+	.full(rx2_phyq_full),
+	.wr_en(rx2_phyq_wr_en),
+	.wr_clk(gmii_2_rx_clk),
+
+	.dout(rx2_phyq_dout),
+	.empty(rx2_phyq_empty),
+	.rd_en(rx2_phyq_rd_en),
+	.rd_clk(sys_clk),
+
+	.rst(sys_rst)
+);
 `else
-  wire sys_rst = ~reset_n;
+assign rx2_phyq_empty = 1'b1;
+`endif
+`ifdef ENABLE_RGMII3
+asfifo9_12 rx3_phyq (
+	.din(rx3_phyq_din),
+	.full(rx3_phyq_full),
+	.wr_en(rx3_phyq_wr_en),
+	.wr_clk(gmii_3_rx_clk),
+
+	.dout(rx3_phyq_dout),
+	.empty(rx3_phyq_empty),
+	.rd_en(rx3_phyq_rd_en),
+	.rd_clk(sys_clk),
+
+	.rst(sys_rst)
+);
+`else
+assign rx3_phyq_empty = 1'b1;
+`endif
+`else
+asfifo # (
+	.DATA_WIDTH(9),
+	.ADDRESS_WIDTH(12)
+) rx0fifo (
+	.din(rx0_phyq_din),
+	.full(rx0_phyq_full),
+	.wr_en(rx0_phyq_wr_en),
+	.wr_clk(gmii_0_rx_clk),
+
+	.dout(rx0_phyq_dout),
+	.empty(rx0_phyq_empty),
+	.rd_en(rx0_phyq_rd_en),
+	.rd_clk(sys_clk),
+
+	.rst(sys_rst)
+);
+asfifo # (
+	.DATA_WIDTH(9),
+	.ADDRESS_WIDTH(12)
+) rx1fifo (
+	.din(rx1_phyq_din),
+	.full(rx1_phyq_full),
+	.wr_en(rx1_phyq_wr_en),
+	.wr_clk(gmii_1_rx_clk),
+
+	.dout(rx1_phyq_dout),
+	.empty(rx1_phyq_empty),
+	.rd_en(rx1_phyq_rd_en),
+	.rd_clk(sys_clk),
+
+	.rst(sys_rst)
+);
+`ifdef ENABLE_RGMII2
+asfifo # (
+	.DATA_WIDTH(9),
+	.ADDRESS_WIDTH(12)
+) rx2fifo (
+	.din(rx2_phyq_din),
+	.full(rx2_phyq_full),
+	.wr_en(rx2_phyq_wr_en),
+	.wr_clk(gmii_2_rx_clk),
+
+	.dout(rx2_phyq_dout),
+	.empty(rx2_phyq_empty),
+	.rd_en(rx2_phyq_rd_en),
+	.rd_clk(sys_clk),
+
+	.rst(sys_rst)
+);
+`else
+assign rx2_phyq_empty = 1'b1;
+`endif
+`ifdef ENABLE_RGMII3
+asfifo # (
+	.DATA_WIDTH(9),
+	.ADDRESS_WIDTH(12)
+) rx3fifo (
+	.din(rx3_phyq_din),
+	.full(rx3_phyq_full),
+	.wr_en(rx3_phyq_wr_en),
+	.wr_clk(gmii_3_rx_clk),
+
+	.dout(rx3_phyq_dout),
+	.empty(rx3_phyq_empty),
+	.rd_en(rx3_phyq_rd_en),
+	.rd_clk(sys_clk),
+
+	.rst(sys_rst)
+);
+`else
+assign rx3_phyq_empty = 1'b1;
+`endif
 `endif
 
-/* --------------------------------------- */
-/* Ethernet MAC */
+//-----------------------------------
+// RX-TX FIFO
+//-----------------------------------
+wire [8:0] rx0tx0_din, rx0tx0_dout;
+wire rx0tx0_full, rx0tx0_wr_en;
+wire rx0tx0_empty, rx0tx0_rd_en;
+wire [11:0] rx0tx0_data_count;
 
-// PHY0
-wire      rd0_en;
-wire[8:0] rd0_data;
-wire      rd0_empty;
-wire      wr0_en;
-wire[8:0] wr0_data;
-wire      wr0_full;
-// PHY1
-wire      rd1_en;
-wire[8:0] rd1_data;
-wire      rd1_empty;
-wire      wr1_en;
-wire[8:0] wr1_data;
-wire      wr1_full;
+wire [8:0] rx1tx1_din, rx1tx1_dout;
+wire rx1tx1_full, rx1tx1_wr_en;
+wire rx1tx1_empty, rx1tx1_rd_en;
+wire [11:0] rx1tx1_data_count;
 
-assign phy0_gtx_clk = phy0_125M_clk;
-assign phy1_gtx_clk = phy1_125M_clk;
+wire [8:0] rx2tx2_din, rx2tx2_dout;
+wire rx2tx2_full, rx2tx2_wr_en;
+wire rx2tx2_empty, rx2tx2_rd_en;
+wire [11:0] rx2tx2_data_count;
 
-rx rx0 (
-    .sys_rst(sys_rst)
-  , .phy_rx_clk(phy0_rx_clk)
-  , .phy_rx_dv(phy0_rx_dv)
-  , .phy_rxd(phy0_rxd)
-  , .rd_clk(sys_clk)
-  , .rd_en(rd0_en)
-  , .rd_data(rd0_data)
-  , .rd_empty(rd0_empty)
+wire [8:0] rx3tx3_din, rx3tx3_dout;
+wire rx3tx3_full, rx3tx3_wr_en;
+wire rx3tx3_empty, rx3tx3_rd_en;
+wire [11:0] rx3tx3_data_count;
+
+`ifdef SIMULATION
+sfifo # (
+	.DATA_WIDTH(9),
+	.ADDR_WIDTH(12)
+) rx0tx0_q (
+	.clk(sys_clk),
+	.rst(sys_rst),
+
+	.din(rx0tx0_din),
+	.full(rx0tx0_full),
+	.wr_cs(rx0tx0_wr_en),
+	.wr_en(rx0tx0_wr_en),
+
+	.dout(rx0tx0_dout),
+	.empty(rx0tx0_empty),
+	.rd_cs(rx0tx0_rd_en),
+	.rd_en(rx0tx0_rd_en),
+
+	.data_count(rx0tx0_data_count)
 );
+sfifo # (
+	.DATA_WIDTH(9),
+	.ADDR_WIDTH(12)
+) rx1tx1_q (
+	.clk(sys_clk),
+	.rst(sys_rst),
 
-tx tx0 (
-    .sys_rst(sys_rst)
-  , .wr_clk(sys_clk)
-  , .wr_en(wr0_en)
-  , .wr_data(wr0_data)
-  , .phy_gtx_clk(phy0_125M_clk)
-  , .phy_tx_en(phy0_tx_en)
-  , .phy_txd(phy0_txd)
+	.din(rx1tx1_din),
+	.full(rx1tx1_full),
+	.wr_cs(rx1tx1_wr_en),
+	.wr_en(rx1tx1_wr_en),
+
+	.dout(rx1tx1_dout),
+	.empty(rx1tx1_empty),
+	.rd_cs(rx1tx1_rd_en),
+	.rd_en(rx1tx1_rd_en),
+
+	.data_count(rx1tx1_data_count)
 );
+sfifo # (
+	.DATA_WIDTH(9),
+	.ADDR_WIDTH(12)
+) rx2tx2_q (
+	.clk(sys_clk),
+	.rst(sys_rst),
 
-rx rx1 (
-    .sys_rst(sys_rst)
-  , .phy_rx_clk(phy1_rx_clk)
-  , .phy_rx_dv(phy1_rx_dv)
-  , .phy_rxd(phy1_rxd)
-  , .rd_clk(sys_clk)
-  , .rd_en(rd1_en)
-  , .rd_data(rd1_data)
-  , .rd_empty(rd1_empty)
+	.din(rx2tx2_din),
+	.full(rx2tx2_full),
+	.wr_cs(rx2tx2_wr_en),
+	.wr_en(rx2tx2_wr_en),
+
+	.dout(rx2tx2_dout),
+	.empty(rx2tx2_empty),
+	.rd_cs(rx2tx2_rd_en),
+	.rd_en(rx2tx2_rd_en),
+
+	.data_count(rx2tx2_data_count)
 );
+sfifo # (
+	.DATA_WIDTH(9),
+	.ADDR_WIDTH(12)
+) rx3tx3_q (
+	.clk(sys_clk),
+	.rst(sys_rst),
 
-tx tx1 (
-    .sys_rst(sys_rst)
-  , .wr_clk(sys_clk)
-  , .wr_en(wr1_en)
-  , .wr_data(wr1_data)
-  , .phy_gtx_clk(phy1_125M_clk)
-  , .phy_tx_en(phy1_tx_en)
-  , .phy_txd(phy1_txd)
+	.din(rx3tx3_din),
+	.full(rx3tx3_full),
+	.wr_cs(rx3tx3_wr_en),
+	.wr_en(rx3tx3_wr_en),
+
+	.dout(rx3tx3_dout),
+	.empty(rx3tx3_empty),
+	.rd_cs(rx3tx3_rd_en),
+	.rd_en(rx3tx3_rd_en),
+
+	.data_count(rx3tx3_data_count)
 );
+`else
+sfifo9_12 rx0tx0_q (
+	.clk(sys_clk),
+	.rst(sys_rst),
 
-filter filter (
-    .sys_clk(sys_clk)
-  , .sys_rst(sys_rst)
-// PHY0->PHY1
-  , .rd0_en(rd0_en)
-  , .rd0_data(rd0_data)
-  , .rd0_empty(rd0_empty)
-  , .wr0_en(wr0_en)
-  , .wr0_data(wr0_data)
-  , .wr0_full(wr0_full)
-// PHY1->PHY0
-  , .rd1_en(rd1_en)
-  , .rd1_data(rd1_data)
-  , .rd1_empty(rd1_empty)
-  , .wr1_en(wr1_en)
-  , .wr1_data(wr1_data)
-  , .wr1_full(wr1_full)
+	.din(rx0tx0_din),
+	.full(rx0tx0_full),
+	.wr_en(rx0tx0_wr_en),
+
+	.dout(rx0tx0_dout),
+	.empty(rx0tx0_empty),
+	.rd_en(rx0tx0_rd_en),
+
+	.data_count(rx0tx0_data_count)
 );
+sfifo9_12 rx1tx1_q (
+	.clk(sys_clk),
+	.rst(sys_rst),
 
-/* --------------------------------------- */
-/* LED */
-reg[31:0] led_cnt = 32'b0;
-always @(posedge clock) begin
-  if (sys_rst)
-    led_cnt <= 32'b0;
-  else
-    led_cnt <= led_cnt + 32'b1;
-end
-assign led = ~led_cnt[29:22];
+	.din(rx1tx1_din),
+	.full(rx1tx1_full),
+	.wr_en(rx1tx1_wr_en),
+
+	.dout(rx1tx1_dout),
+	.empty(rx1tx1_empty),
+	.rd_en(rx1tx1_rd_en),
+
+	.data_count(rx1tx1_data_count)
+);
+`ifdef ENABLE_RGMII2
+sfifo9_12 rx2tx2_q (
+	.clk(sys_clk),
+	.rst(sys_rst),
+
+	.din(rx2tx2_din),
+	.full(rx2tx2_full),
+	.wr_en(rx2tx2_wr_en),
+
+	.dout(rx2tx2_dout),
+	.empty(rx2tx2_empty),
+	.rd_en(rx2tx2_rd_en),
+
+	.data_count(rx2tx2_data_count)
+);
+`else
+assign rx2tx2_empty = 1'b1;
+`endif
+`ifdef ENABLE_RGMII3
+sfifo9_12 rx3tx3_q (
+	.clk(sys_clk),
+	.rst(sys_rst),
+
+	.din(rx3tx3_din),
+	.full(rx3tx3_full),
+	.wr_en(rx3tx3_wr_en),
+
+	.dout(rx3tx3_dout),
+	.empty(rx3tx3_empty),
+	.rd_en(rx3tx3_rd_en),
+
+	.data_count(rx3tx3_data_count)
+);
+`else
+assign rx3tx3_empty = 1'b1;
+`endif
+`endif
+
+
+//-----------------------------------
+// GMII2FIFO9 module
+//-----------------------------------
+gmii2fifo9 # (
+	.Gap(4'h8)
+) rx0gmii2fifo (
+	.sys_rst(sys_rst),
+
+	.gmii_rx_clk(gmii_0_rx_clk),
+	.gmii_rx_dv(gmii_0_rx_dv),
+	.gmii_rxd(gmii_0_rxd),
+
+	.din(rx0tx0_din),
+	.full(rx0tx0_full),
+	.wr_en(rx0tx0_wr_en),
+	.wr_clk()
+);
+gmii2fifo9 # (
+	.Gap(4'h8)
+) rx1gmii2fifo (
+	.sys_rst(sys_rst),
+
+	.gmii_rx_clk(gmii_1_rx_clk),
+	.gmii_rx_dv(gmii_1_rx_dv),
+	.gmii_rxd(gmii_1_rxd),
+
+	.din(rx1tx1_din),
+	.full(rx1tx1_full),
+	.wr_en(rx1tx1_wr_en),
+	.wr_clk()
+);
+`ifdef ENABLE_RGMII2
+gmii2fifo9 # (
+	.Gap(4'h8)
+) rx2gmii2fifo (
+	.sys_rst(sys_rst),
+
+	.gmii_rx_clk(gmii_2_rx_clk),
+	.gmii_rx_dv(gmii_2_rx_dv),
+	.gmii_rxd(gmii_2_rxd),
+
+	.din(rx2_phyq_din),
+	.full(rx2_phyq_full),
+	.wr_en(rx2_phyq_wr_en),
+	.wr_clk()
+);
+`endif
+`ifdef ENABLE_RGMII3
+gmii2fifo9 # (
+	.Gap(4'h8)
+) rx3gmii2fifo (
+	.sys_rst(sys_rst),
+
+	.gmii_rx_clk(gmii_3_rx_clk),
+	.gmii_rx_dv(gmii_3_rx_dv),
+	.gmii_rxd(gmii_3_rxd),
+
+	.din(rx3_phyq_din),
+	.full(rx3_phyq_full),
+	.wr_en(rx3_phyq_wr_en),
+	.wr_clk()
+);
+`endif
+
+//-----------------------------------
+// FIFO9TOGMII module
+//-----------------------------------
+fifo9togmii tx0fifo2gmii (
+	.sys_rst(sys_rst),
+
+	.dout(rx1tx1_dout),
+	.empty(rx1tx1_empty),
+	.rd_en(rx1tx1_rd_en),
+	.rd_clk(),
+
+	.gmii_tx_clk(gmii_tx_clk),
+	.gmii_tx_en(gmii_0_tx_en),
+	.gmii_txd(gmii_0_txd)
+);
+fifo9togmii tx1fifo2gmii (
+	.sys_rst(sys_rst),
+
+	.dout(rx0tx0_dout),
+	.empty(rx0tx0_empty),
+	.rd_en(rx0tx0_rd_en),
+	.rd_clk(),
+
+	.gmii_tx_clk(gmii_tx_clk),
+	.gmii_tx_en(gmii_1_tx_en),
+	.gmii_txd(gmii_1_txd)
+);
+`ifdef ENABLE_RGMII2
+fifo9togmii tx2fifo2gmii (
+	.sys_rst(sys_rst),
+
+	.dout(rx2tx2_dout),
+	.empty(rx2tx2_empty),
+	.rd_en(rx2tx2_rd_en),
+	.rd_clk(),
+
+	.gmii_tx_clk(gmii_tx_clk),
+	.gmii_tx_en(gmii_2_tx_en),
+	.gmii_txd(gmii_2_txd)
+);
+`endif
+`ifdef ENABLE_RGMII3
+fifo9togmii tx3fifo2gmii (
+	.sys_rst(sys_rst),
+
+	.dout(rx3tx3_dout),
+	.empty(rx3tx3_empty),
+	.rd_en(rx3tx3_rd_en),
+	.rd_clk(),
+
+	.gmii_tx_clk(gmii_tx_clk),
+	.gmii_tx_en(gmii_3_tx_en),
+	.gmii_txd(gmii_3_txd)
+);
+`endif
+
 endmodule
-
-`default_nettype wire

@@ -28,7 +28,7 @@ wire[8:0] fifo_dout;
 wire      fifo_empty;
 wire      fifo_full;
 wire      rd_en = ~fifo_empty && (state != PREAMBLE);
-`ifndef SIMULATION
+`ifdef SIMULATION
 //`ifdef ECP3VERSA
 asfifo9_12 txq (
     .wr_clk(wr_clk)
@@ -85,7 +85,6 @@ crc_gen crc_inst (
 
 /* --------------------------------------- */
 /* tx */
-
 always @(posedge phy_gtx_clk) begin
   if (sys_rst) begin
     state     <= SEND_IDLE;

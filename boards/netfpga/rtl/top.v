@@ -231,21 +231,22 @@ assign gmii_2_tx_er = 1'b0;
 assign gmii_3_tx_er = 1'b0;
 
 system system_inst (
-	.reset_n(~reset),
+	.sys_rst(reset),
+	.sys_clk(rgmii_tx_clk),
 
-	.phy0_125M_clk(rgmii_tx_clk),
-	.phy0_txd(gmii_0_txd),
-	.phy0_tx_en(gmii_0_tx_en),
-	.phy0_rxd(gmii_0_rxd),
-	.phy0_rx_dv(gmii_0_rx_dv),
-	.phy0_rx_clk(rgmii_0_rxc),
+	.gmii_tx_clk(rgmii_tx_clk),
 
-	.phy1_125M_clk(rgmii_tx_clk),
-	.phy1_txd(gmii_1_txd),
-	.phy1_tx_en(gmii_1_tx_en),
-	.phy1_rxd(gmii_1_rxd),
-	.phy1_rx_dv(gmii_1_rx_dv),
-	.phy1_rx_clk(rgmii_1_rxc)
+	.gmii_0_txd(gmii_0_txd),
+	.gmii_0_tx_en(gmii_0_tx_en),
+	.gmii_0_rxd(gmii_0_rxd),
+	.gmii_0_rx_dv(gmii_0_rx_dv),
+	.gmii_0_rx_clk(rgmii_0_rxc),
+
+	.gmii_1_txd(gmii_1_txd),
+	.gmii_1_tx_en(gmii_1_tx_en),
+	.gmii_1_rxd(gmii_1_rxd),
+	.gmii_1_rx_dv(gmii_1_rx_dv),
+	.gmii_1_rx_clk(rgmii_1_rxc)
 
 );
 

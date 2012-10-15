@@ -86,7 +86,7 @@ end
 
 /* --------------------------------------- */
 /* recieve FIFO */
-`ifndef SIMULATION
+`ifdef SIMULATION
 //`ifdef ECP3VERSA
 asfifo9_12 rxq (
     .wr_clk(phy_rx_clk)
