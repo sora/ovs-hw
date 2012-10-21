@@ -1,4 +1,5 @@
 //`define ADD_SFD
+//`define ADD_CRC
 
 module fifo9togmii (
 	// FIFO
@@ -76,11 +77,16 @@ always @(posedge gmii_tx_clk) begin
 					txd <= dout[ 7: 0];
 					tx_en <= dout[8]; 
 					if (dout[8] == 1'b0) begin
+`ifdef ADD_CRC
 						crc_rd <= 1'b1;
 						txd <= crc_out[31:24];	
 						tx_en <= 1'b1;
 						fcs_count <= 2'h0;
 						state <= STATE_FCS;
+`else
+						tx_en <= 1'b0;
+					        state <= STATE_IDLE;
+`endif
 					end
 				end else
 					state <= STATE_IDLE;
@@ -176,11 +182,16 @@ always @(posedge gmii_tx_clk) begin
 					txd <= dout[ 7: 0];
 					tx_en <= dout[8]; 
 					if (dout[8] == 1'b0) begin
+`ifdef ADD_CRC
 						crc_rd <= 1'b1;
 						txd <= crc_out[31:24];	
 						tx_en <= 1'b1;
 						fcs_count <= 2'h0;
 						state <= STATE_FCS;
+`else
+						tx_en <= 1'b0;
+					        state <= STATE_IDLE;
+`endif
 					end
 				end else
 					state <= STATE_IDLE;

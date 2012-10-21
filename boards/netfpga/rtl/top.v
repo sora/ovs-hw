@@ -39,7 +39,16 @@ module top (
 
 );
 
-assign reset   = ~cpci_reset;
+wire sys_clk;
+
+reg [9:0] reset_counter = 10'h0;
+always @(posedge sys_clk) begin
+	if (reset_counter[9] == 1'b0)
+		reset_counter <= reset_counter + 10'd1;
+end
+
+assign reset   = ~reset_counter[9];
+//assign reset   = ~cpci_reset;
 //assign sys_clk = cpci_clk;
 
 wire [7:0]    gmii_0_txd,   gmii_1_txd,   gmii_2_txd,   gmii_3_txd;
