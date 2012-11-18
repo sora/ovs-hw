@@ -2,5 +2,5 @@
 //`define ENABLE_PCI
 //`define ENABLE_NIC
 
-//`define ENABLE_RGMII2
-//`define ENABLE_RGMII3
+`define ENABLE_RGMII2
+`define ENABLE_RGMII3

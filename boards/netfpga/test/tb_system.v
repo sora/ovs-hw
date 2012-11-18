@@ -36,46 +36,46 @@ wire [7:0] gmii_0_txd, gmii_1_txd, gmii_2_txd, gmii_3_txd;
 wire gmii_0_tx_en, gmii_1_tx_en, gmii_2_tx_en, gmii_3_tx_en;
 
 system system_inst (
-        .sys_rst(sys_rst),
-        .sys_clk(phy_rx_clk),
-	.gmii_tx_clk(phy_tx_clk),
+    .sys_rst(sys_rst)
+  , .sys_clk(phy_rx_clk)
+  , .gmii_tx_clk(phy_tx_clk)
 
-	.gmii_0_txd(gmii_0_txd),
-	.gmii_0_tx_en(gmii_0_tx_en),
-        .gmii_0_rxd(phy_rxd),
-        .gmii_0_rx_dv(phy_rx_dv),
-        .gmii_0_rx_clk(phy_rx_clk),
+  , .gmii_0_txd(gmii_0_txd)
+  , .gmii_0_tx_en(gmii_0_tx_en)
+  , .gmii_0_rxd(phy_rxd)
+  , .gmii_0_rx_dv(phy_rx_dv)
+  , .gmii_0_rx_clk(phy_rx_clk)
 
-	.gmii_1_txd(gmii_1_txd),
-	.gmii_1_tx_en(gmii_1_tx_en),
-        .gmii_1_rxd(8'h00),
-        .gmii_1_rx_dv(1'b0),
-        .gmii_1_rx_clk(phy_rx_clk),
+  , .gmii_1_txd(gmii_1_txd)
+  , .gmii_1_tx_en(gmii_1_tx_en)
+  , .gmii_1_rxd(8'h00)
+  , .gmii_1_rx_dv(1'b0)
+  , .gmii_1_rx_clk(phy_rx_clk)
 
-	.gmii_2_txd(gmii_2_txd),
-	.gmii_2_tx_en(gmii_2_tx_en),
-        .gmii_2_rxd(phy_rxd),
-        .gmii_2_rx_dv(phy_rx_dv),
-        .gmii_2_rx_clk(phy_rx_clk),
+  , .gmii_2_txd(gmii_2_txd)
+  , .gmii_2_tx_en(gmii_2_tx_en)
+  , .gmii_2_rxd(8'h00)
+  , .gmii_2_rx_dv(1'b0)
+  , .gmii_2_rx_clk(phy_rx_clk)
 
-	.gmii_3_txd(gmii_3_txd),
-	.gmii_3_tx_en(gmii_3_tx_en),
-        .gmii_3_rxd(phy_rxd),
-        .gmii_3_rx_dv(phy_rx_dv),
-        .gmii_3_rx_clk(phy_rx_clk)
+  , .gmii_3_txd(gmii_3_txd)
+  , .gmii_3_tx_en(gmii_3_tx_en)
+  , .gmii_3_rxd(8'h00)
+  , .gmii_3_rx_dv(1'b0)
+  , .gmii_3_rx_clk(phy_rx_clk)
 );
 
 task waitclock;
 begin
-	@(posedge sys_clk);
-	#1;
+  @(posedge sys_clk);
+  #1;
 end
 endtask
 
 /*
 always @(posedge Wclk) begin
-	if (WriteEn_in == 1'b1)
-		$display("Data_in: %x", Data_in);
+  if (WriteEn_in == 1'b1)
+    $display("Data_in: %x", Data_in);
 end
 */
 
@@ -83,29 +83,29 @@ reg [11:0] rom [0:4095];
 reg [11:0] counter;
 
 always @(posedge phy_rx_clk) begin
-	{phy_rx_dv,phy_rxd} <= rom[ counter ];
-	counter <= counter + 1;
+  {phy_rx_dv, phy_rxd} <= rom[counter];
+  counter <= counter + 1;
 end
 
 initial begin
-        $dumpfile("./test.vcd");
-	$dumpvars(0, tb_system); 
-	$readmemh("./phy_test.hex", rom);
-	/* Reset / Initialize our logic */
-	sys_rst = 1'b1;
-	counter = 0;
+  $dumpfile("./test.vcd");
+  $dumpvars(0, tb_system); 
+  $readmemh("./phy_pingto5hosts.hex", rom);
+  /* Reset / Initialize our logic */
+  sys_rst = 1'b1;
+  counter = 0;
 
-	waitclock;
-	waitclock;
+  waitclock;
+  waitclock;
 
-	sys_rst = 1'b0;
+  sys_rst = 1'b0;
 
-	waitclock;
+  waitclock;
 
 
-	#30000;
+  #30000;
 
-	$finish;
+  $finish;
 end
 
 endmodule

@@ -4,7 +4,7 @@ SOURCES=tb_system.v \
 	$(wildcard ../../../cores/sfifo/rtl/*.v) \
 	$(wildcard ../../../cores/fifo9togmii/rtl/*.v) \
 	$(wildcard ../../../cores/gmii2fifo9/rtl/*.v) \
-	$(wildcard ../../../cores/lookupfib/rtl/*.v) \
+	$(wildcard ../../../cores/lookupflow/rtl/*.v) \
 	$(wildcard ../../../cores/forwarder/rtl/*.v) \
 	$(wildcard ../../../cores/sram/rtl/*.v) \
 	$(wildcard ../../../cores/dpram/rtl/*.v) \

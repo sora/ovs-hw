@@ -1,4 +1,4 @@
-//`define ADD_SFD
+`define ADD_SFD
 //`define ADD_CRC
 
 module fifo9togmii (
