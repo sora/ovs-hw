@@ -1,5 +1,6 @@
 module lookupflow #(
-  parameter NPORT = 4'h4
+    parameter NPORT    = 4'h4
+  , parameter PORT_NUM = 4'h0
 ) (
     input                  sys_rst
   , input                  sys_clk
@@ -14,6 +15,7 @@ module lookupflow #(
 //               of_lookup_data[111: 64] == { 8'h40, 8'h6c, 8'h8f, 8'h37, 8'hf1, 8'hf8 } &&
 //               of_lookup_data[ 63: 32] == { 8'd10, 8'd0, 8'd0, 8'd200 } );
 wire match = 1'b1;
+wire [3:0] fwd_ports = ~PORT_NUM;
 
 function [3:0] ip2port;
   input [31:0] dstip;
@@ -23,7 +25,7 @@ function [3:0] ip2port;
     32'h0A000003: ip2port = 4'h3; // dst ip = 10.0.0.3
     32'h0A000004: ip2port = 4'h4; // dst ip = 10.0.0.4
     32'h0A000005: ip2port = 4'h5; // dst ip = 10.0.0.5
-    default:      ip2port = 4'h5; // no match
+    default:      ip2port = 4'h0; // no match
   endcase
 endfunction
 
@@ -38,6 +40,7 @@ always @(posedge sys_clk) begin
     of_lookup_err <= 1'b0;
     if (of_lookup_req && match) begin
       case (ip2port(of_lookup_data[31:0]))
+        /*
         4'h0: begin
           of_lookup_fwd_port <= 4'b0000;
           of_lookup_ack      <= 1'b1;
@@ -65,6 +68,11 @@ always @(posedge sys_clk) begin
         end
         default: begin
           of_lookup_fwd_port <= 4'b0000;
+        end
+        */
+        default: begin
+          of_lookup_fwd_port <= ~PORT_NUM;
+          of_lookup_ack      <= 1'b1;
         end
       endcase
     end
