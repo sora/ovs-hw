@@ -2,22 +2,24 @@
 
 import socket, struct, time, popen2, re
 
-host = '127.0.0.1'
+addr = '127.0.0.1'
 port = 3776
-addr = (host, port)
+host = (addr, port)
 s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
-cmd = ('cat dump-flows.log')
+cmd = ('cat sample_dump-flows.txt')
 
 p = re.compile(r'priority=(\d+),in_port=(\d+) actions=output:(\d+)')
 while True:
+  flows = list()
   out, stdin, err = popen2.popen3(cmd)
   for line in out:
     m = p.search(line[:-1])
     if m:
-      msg_body = struct.pack('>bb', int(m.group(2)), int(m.group(3)))
-      s.sendto(msg_body, addr)
-      print(struct.unpack('>bb', msg_body))
+      print "dump_flows (in_port: %s, output: %s)" % (m.group(2), m.group(3))
+      flows.append(struct.pack('>bb', int(m.group(2)), int(m.group(3))))
+  s.sendto(''.join([str(t) for t in flows]), host)
+  print "*--- --- --- --- --- --- --- ---*"
   time.sleep(5)
 
 # NXST_FLOW reply (xid=0x4):
