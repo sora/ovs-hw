@@ -91,6 +91,7 @@ initial begin
   $dumpfile("./test.vcd");
   $dumpvars(0, tb_system); 
   $readmemh("./phy_pingto5hosts.hex", rom);
+//  $readmemh("./phy_test.hex", rom);
   /* Reset / Initialize our logic */
   sys_rst = 1'b1;
   counter = 0;

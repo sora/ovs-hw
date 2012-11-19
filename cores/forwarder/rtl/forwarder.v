@@ -72,23 +72,16 @@ always @(posedge sys_clk) begin
 end
 
 //-----------------------------------
-// in_frame
+// on data processing
 //-----------------------------------
 reg in_frame;
-always @(posedge sys_clk) begin
-  if (sys_rst) begin
-    in_frame <= 1'b0;
-  end else begin
-    if (rx_rd_en)
-      in_frame <= dout42[8];
-  end
-end
+wire in_process = (in_frame == 1'b1 || rx_rd_en == 1'b1);
 
 //-----------------------------------
 // data pipeline
 // 50 byte: Ethernet(802.1q) 24 byte + IPv4 20 byte + TCP 4 byte
 //-----------------------------------
-reg [9:0]  dout0,  dout1,  dout2,  dout3,  dout4,  dout5,  dout6,  dout7,  dout8,  dout9,
+reg [9:0]          dout1,  dout2,  dout3,  dout4,  dout5,  dout6,  dout7,  dout8,  dout9,
           dout10, dout11, dout12, dout13, dout14, dout15, dout16, dout17, dout18, dout19,
           dout20, dout21, dout22, dout23, dout24, dout25, dout26, dout27, dout28, dout29,
           dout30, dout31, dout32, dout33, dout34, dout35, dout36, dout37, dout38, dout39,
@@ -98,7 +91,7 @@ reg [9:0]  dout0,  dout1,  dout2,  dout3,  dout4,  dout5,  dout6,  dout7,  dout8
 
 always @(posedge sys_clk) begin
   if (sys_rst) begin
-      dout0 <= 10'b0;  dout1 <= 10'b0;  dout2 <= 10'b0;  dout3 <= 10'b0;  dout4 <= 10'b0;
+                       dout1 <= 10'b0;  dout2 <= 10'b0;  dout3 <= 10'b0;  dout4 <= 10'b0;
       dout5 <= 10'b0;  dout6 <= 10'b0;  dout7 <= 10'b0;  dout8 <= 10'b0;  dout9 <= 10'b0;
      dout10 <= 10'b0; dout11 <= 10'b0; dout12 <= 10'b0; dout13 <= 10'b0; dout14 <= 10'b0;
      dout15 <= 10'b0; dout16 <= 10'b0; dout17 <= 10'b0; dout18 <= 10'b0; dout19 <= 10'b0;
@@ -113,9 +106,9 @@ always @(posedge sys_clk) begin
      dout60 <= 10'b0; dout61 <= 10'b0; dout62 <= 10'b0; dout63 <= 10'b0; dout64 <= 10'b0;
      dout65 <= 10'b0; dout66 <= 10'b0; dout67 <= 10'b0; dout68 <= 10'b0; dout69 <= 10'b0;
   end else begin
-    if (rx_rd_en || in_frame) begin
-       dout0 <= { rx_rd_en, rx_dout };
-       dout1 <= dout0;   dout2 <=  dout1;  dout3 <=  dout2;  dout4 <=  dout3;  dout5 <=  dout4;
+    if (in_process) begin
+       dout1 <= { rx_rd_en, rx_dout };
+                         dout2 <=  dout1;  dout3 <=  dout2;  dout4 <=  dout3;  dout5 <=  dout4;
        dout6 <= dout5;   dout7 <=  dout6;  dout8 <=  dout7;  dout9 <=  dout8; dout10 <=  dout9;
       dout11 <= dout10; dout12 <= dout11; dout13 <= dout12; dout14 <= dout13; dout15 <= dout14;
       dout16 <= dout15; dout17 <= dout16; dout18 <= dout17; dout19 <= dout18; dout20 <= dout19;
@@ -134,17 +127,32 @@ always @(posedge sys_clk) begin
 end
 
 //-----------------------------------
-// counter
+// in_frame
+//-----------------------------------
+always @(posedge sys_clk) begin
+  if (sys_rst) begin
+    in_frame <= 1'b0;
+  end else begin
+    if (in_process) begin
+      if (dout42[9] == 1'b1)
+        in_frame <= dout42[8];
+    end
+  end
+end
+
+//-----------------------------------
+// global counter
 //-----------------------------------
 reg [11:0] counter;
 always @(posedge sys_clk) begin
   if (sys_rst) begin
     counter <= 12'b0;
   end else begin
-    if (rx_rd_en)
+    if (rx_rd_en) begin
       counter <= counter + 12'h1;
-    else
-      counter <= 12'h0;
+      if (rx_dout[8] == 1'b0)
+        counter <= 12'h0;
+    end
   end
 end
 
@@ -156,17 +164,18 @@ always @(posedge sys_clk) begin
   if (sys_rst) begin
     counter42 <= 12'b0;
   end else begin
-    if (rx_rd_en || in_frame) begin
-      if (dout42[8])
-        counter42 <= counter42 + 12'b1;
-      else
+    if (in_process) begin
+      if (dout42[9] == 1'b1) begin
         counter42 <= 12'b0;
+        if (dout42[8] == 1'b1)
+          counter42 <= counter42 + 12'b1;
+      end
     end
   end
 end
 
 //-----------------------------------
-// target headers
+// target headers of process
 //-----------------------------------
 reg [47:0] eth_dst;
 reg [47:0] eth_src;
@@ -195,50 +204,52 @@ always @(posedge sys_clk) begin
     tp_src_port <= 16'b0;
     tp_dst_port <= 16'b0;
   end else begin
-    if (rx_rd_en && rx_dout[8]) begin
-      case (counter)
-        // ethernet dst MAC Address
-        12'h00: eth_dst[47:40] <= rx_dout[7:0];
-        12'h01: eth_dst[39:32] <= rx_dout[7:0];
-        12'h02: eth_dst[31:24] <= rx_dout[7:0];
-        12'h03: eth_dst[23:16] <= rx_dout[7:0];
-        12'h04: eth_dst[15: 8] <= rx_dout[7:0];
-        12'h05: eth_dst[ 7: 0] <= rx_dout[7:0];
-        // ethernet src MAC Address
-        12'h06: eth_src[47:40] <= rx_dout[7:0];
-        12'h07: eth_src[39:32] <= rx_dout[7:0];
-        12'h08: eth_src[31:24] <= rx_dout[7:0];
-        12'h09: eth_src[23:16] <= rx_dout[7:0];
-        12'h0a: eth_src[15: 8] <= rx_dout[7:0];
-        12'h0b: eth_src[ 7: 0] <= rx_dout[7:0];
-        // ethernet type
-        12'h0c: eth_type[15: 8] <= rx_dout[7:0];
-        12'h0d: eth_type[ 7: 0] <= rx_dout[7:0];
-        // IPv4 header length
-        12'h0e: ip_hdrlen[3:0] <= rx_dout[3:0];
-        // IPv4 ToS
-        12'h0f: ipv4_tos[7:0] <= rx_dout[7:0];
-        // IPv4 TTL
-        12'h16: ipv4_ttl[7:0] <= rx_dout[7:0];
-        // IPv4 protocol
-        12'h17: ipv4_proto[7:0] <= rx_dout[7:0];
-        // IPv4 src IP address
-        12'h1a: ipv4_src_ip[31:24] <= rx_dout[7:0];
-        12'h1b: ipv4_src_ip[23:16] <= rx_dout[7:0];
-        12'h1c: ipv4_src_ip[15: 8] <= rx_dout[7:0];
-        12'h1d: ipv4_src_ip[ 7: 0] <= rx_dout[7:0];
-        // IPv4 dst IP address
-        12'h1e: ipv4_dst_ip[31:24] <= rx_dout[7:0];
-        12'h1f: ipv4_dst_ip[23:16] <= rx_dout[7:0];
-        12'h20: ipv4_dst_ip[15: 8] <= rx_dout[7:0];
-        12'h21: ipv4_dst_ip[ 7: 0] <= rx_dout[7:0];
-        // transport layer src port
-        12'h22: tp_src_port[15: 8] <= rx_dout[7:0];
-        12'h23: tp_src_port[ 7: 0] <= rx_dout[7:0];
-        // transport layer dst port
-        12'h24: tp_dst_port[15: 8] <= rx_dout[7:0];
-        12'h25: tp_dst_port[ 7: 0] <= rx_dout[7:0];
-      endcase
+    if (rx_rd_en) begin
+      if (rx_dout[8] == 1'b1 && rx_rd_en == 1'b1) begin
+        case (counter)
+          // ethernet dst MAC Address
+          12'h00: eth_dst[47:40] <= rx_dout[7:0];
+          12'h01: eth_dst[39:32] <= rx_dout[7:0];
+          12'h02: eth_dst[31:24] <= rx_dout[7:0];
+          12'h03: eth_dst[23:16] <= rx_dout[7:0];
+          12'h04: eth_dst[15: 8] <= rx_dout[7:0];
+          12'h05: eth_dst[ 7: 0] <= rx_dout[7:0];
+          // ethernet src MAC Address
+          12'h06: eth_src[47:40] <= rx_dout[7:0];
+          12'h07: eth_src[39:32] <= rx_dout[7:0];
+          12'h08: eth_src[31:24] <= rx_dout[7:0];
+          12'h09: eth_src[23:16] <= rx_dout[7:0];
+          12'h0a: eth_src[15: 8] <= rx_dout[7:0];
+          12'h0b: eth_src[ 7: 0] <= rx_dout[7:0];
+          // ethernet type
+          12'h0c: eth_type[15: 8] <= rx_dout[7:0];
+          12'h0d: eth_type[ 7: 0] <= rx_dout[7:0];
+          // IPv4 header length
+          12'h0e: ip_hdrlen[3:0] <= rx_dout[3:0];
+          // IPv4 ToS
+          12'h0f: ipv4_tos[7:0] <= rx_dout[7:0];
+          // IPv4 TTL
+          12'h16: ipv4_ttl[7:0] <= rx_dout[7:0];
+          // IPv4 protocol
+          12'h17: ipv4_proto[7:0] <= rx_dout[7:0];
+          // IPv4 src IP address
+          12'h1a: ipv4_src_ip[31:24] <= rx_dout[7:0];
+          12'h1b: ipv4_src_ip[23:16] <= rx_dout[7:0];
+          12'h1c: ipv4_src_ip[15: 8] <= rx_dout[7:0];
+          12'h1d: ipv4_src_ip[ 7: 0] <= rx_dout[7:0];
+          // IPv4 dst IP address
+          12'h1e: ipv4_dst_ip[31:24] <= rx_dout[7:0];
+          12'h1f: ipv4_dst_ip[23:16] <= rx_dout[7:0];
+          12'h20: ipv4_dst_ip[15: 8] <= rx_dout[7:0];
+          12'h21: ipv4_dst_ip[ 7: 0] <= rx_dout[7:0];
+          // transport layer src port
+          12'h22: tp_src_port[15: 8] <= rx_dout[7:0];
+          12'h23: tp_src_port[ 7: 0] <= rx_dout[7:0];
+          // transport layer dst port
+          12'h24: tp_dst_port[15: 8] <= rx_dout[7:0];
+          12'h25: tp_dst_port[ 7: 0] <= rx_dout[7:0];
+        endcase
+      end
     end
   end
 end
@@ -250,10 +261,9 @@ always @(posedge sys_clk) begin
   if (sys_rst) begin
     of_lookup_req <= 1'b0;
   end else begin
+    of_lookup_req <= 1'b0;
     if (counter == 12'h26)
       of_lookup_req <= 1'b1;
-    else
-      of_lookup_req <= 1'b0;
   end
 end
 
@@ -267,19 +277,17 @@ wire [2:0]  vlan_priority = 3'b0;
 assign of_lookup_data[242:0] = { 4'h0, eth_src, eth_dst, eth_type, vlan_id, vlan_priority,
                           ipv4_src_ip, ipv4_dst_ip, ipv4_proto, ipv4_tos,
                           tp_src_port, tp_dst_port };
-                          */
+*/
 always @(posedge sys_clk) begin
   if (sys_rst) begin
     of_lookup_data <= 116'b0;
   end else begin
-    if (rx_rd_en && rx_dout[8]) begin
-      case (counter)
-        12'h01: of_lookup_data[115:112] <= 4'h0;
-        12'h0c: of_lookup_data[111: 64] <= eth_src[47:0];
-        12'h1e: of_lookup_data[ 63: 32] <= ipv4_src_ip[31:0];
-        12'h22: of_lookup_data[ 31:  0] <= ipv4_dst_ip[31:0];
-      endcase
-    end
+    case (counter)
+      12'h01: of_lookup_data[115:112] <= 4'h0;
+      12'h0c: of_lookup_data[111: 64] <= eth_src[47:0];
+      12'h1e: of_lookup_data[ 63: 32] <= ipv4_src_ip[31:0];
+      12'h22: of_lookup_data[ 31:  0] <= ipv4_dst_ip[31:0];
+    endcase
   end
 end
 
@@ -311,7 +319,7 @@ end
 */
 
 //-----------------------------------
-// lookup response (forwarding port)
+// lookup response (return forwarding ports)
 //-----------------------------------
 reg [3:0] fwd_port;
 reg       fwd_nic;
@@ -321,10 +329,9 @@ always @(posedge sys_clk) begin
     fwd_port <= 4'b0;
     fwd_nic  <= 1'b0;
   end else begin
-    if (rx_dout[8]) begin
-      if (rx_rd_en && of_lookup_ack) begin
-//        fwd_port <= of_lookup_fwd_port[3:0];
-        fwd_port <= 4'b0010;
+    if (rx_rd_en) begin
+      if (rx_dout[8] == 1'b1 && of_lookup_ack == 1'b1) begin
+        fwd_port <= of_lookup_fwd_port[3:0];
         fwd_nic  <= forward_nic;
       end
     end
@@ -344,63 +351,68 @@ always @(posedge sys_clk) begin
     port2tx_wr_en <= 1'b0;
     port3tx_wr_en <= 1'b0;
     nic_wr_en     <= 1'b0;
+    port_din      <= 9'b0;
+    nic_din       <= 9'b0;
+    fwd_port2     <= 4'b0;
+    fwd_nic2      <= 1'b0;
   end else begin
     port0tx_wr_en <= 1'b0;
     port1tx_wr_en <= 1'b0;
     port2tx_wr_en <= 1'b0;
     port3tx_wr_en <= 1'b0;
     nic_wr_en     <= 1'b0;
-    if (rx_rd_en || in_frame) begin
-      if (dout42[9] && dout42[8]) begin
-        case (counter42)
-          12'h00: begin
-            port_din <= { 1'b1, eth_dst[47:40] };
-            port0tx_wr_en <= fwd_port[0];
-            port1tx_wr_en <= fwd_port[1];
-            port2tx_wr_en <= fwd_port[2];
-            port3tx_wr_en <= fwd_port[3];
-            nic_wr_en     <= fwd_nic;
-            fwd_port2     <= fwd_port;
-            fwd_nic2      <= fwd_nic;
-          end
-          12'h01: port_din <= { 1'b1, eth_dst[39:32] };
-          12'h02: port_din <= { 1'b1, eth_dst[31:24] };
-          12'h03: port_din <= { 1'b1, eth_dst[23:16] };
-          12'h04: port_din <= { 1'b1, eth_dst[15: 8] };
-          12'h05: port_din <= { 1'b1, eth_dst[ 7: 0] };
-          12'h06: port_din <= { 1'b1, eth_src[47:40] };
-          12'h07: port_din <= { 1'b1, eth_src[39:32] };
-          12'h08: port_din <= { 1'b1, eth_src[31:24] };
-          12'h09: port_din <= { 1'b1, eth_src[23:16] };
-          12'h0a: port_din <= { 1'b1, eth_src[15: 8] };
-          12'h0b: port_din <= { 1'b1, eth_src[ 7: 0] };
-          12'h0c: port_din <= { 1'b1, eth_type[15: 8] };
-          12'h0d: port_din <= { 1'b1, eth_type[ 7: 0] };
-          12'h17: port_din <= { 1'b1, ipv4_proto[ 7: 0] };
-          12'h1a: port_din <= { 1'b1, ipv4_src_ip[31:24] };
-          12'h1b: port_din <= { 1'b1, ipv4_src_ip[23:16] };
-          12'h1c: port_din <= { 1'b1, ipv4_src_ip[15: 8] };
-          12'h1d: port_din <= { 1'b1, ipv4_src_ip[ 7: 0] };
-          12'h1e: port_din <= { 1'b1, ipv4_dst_ip[31:24] };
-          12'h1f: port_din <= { 1'b1, ipv4_dst_ip[23:16] };
-          12'h20: port_din <= { 1'b1, ipv4_dst_ip[15: 8] };
-          12'h21: port_din <= { 1'b1, ipv4_dst_ip[ 7: 0] };
-          12'h22: port_din <= { 1'b1, tp_src_port[15: 8] };
-          12'h23: port_din <= { 1'b1, tp_src_port[ 7: 0] };
-          12'h24: port_din <= { 1'b1, tp_dst_port[15: 8] };
-          12'h25: port_din <= { 1'b1, tp_dst_port[ 7: 0] };
-          default: port_din <= dout42[8:0];
-        endcase
-        nic_din <= dout42[8:0];
-      end else begin
-        port_din <= 9'h0;
-        nic_din  <= 9'h0;
+    if (in_process) begin
+      if (dout42[9] == 1'b1) begin 
+        port0tx_wr_en <= fwd_port2[0];
+        port1tx_wr_en <= fwd_port2[1];
+        port2tx_wr_en <= fwd_port2[2];
+        port3tx_wr_en <= fwd_port2[3];
+        nic_wr_en     <= fwd_nic;
+        if (dout38[8] == 1'b1 && dout42[8] == 1'b1) begin
+          nic_din <= dout42[8:0];
+          case (counter42)
+            12'h00: begin
+              port_din      <= { 1'b1, eth_dst[47:40] };
+              port0tx_wr_en <= fwd_port[0];
+              port1tx_wr_en <= fwd_port[1];
+              port2tx_wr_en <= fwd_port[2];
+              port3tx_wr_en <= fwd_port[3];
+              fwd_port2     <= fwd_port;
+              fwd_nic2      <= fwd_nic;
+            end
+            12'h01: port_din <= { 1'b1, eth_dst[39:32] };
+            12'h02: port_din <= { 1'b1, eth_dst[31:24] };
+            12'h03: port_din <= { 1'b1, eth_dst[23:16] };
+            12'h04: port_din <= { 1'b1, eth_dst[15: 8] };
+            12'h05: port_din <= { 1'b1, eth_dst[ 7: 0] };
+            12'h06: port_din <= { 1'b1, eth_src[47:40] };
+            12'h07: port_din <= { 1'b1, eth_src[39:32] };
+            12'h08: port_din <= { 1'b1, eth_src[31:24] };
+            12'h09: port_din <= { 1'b1, eth_src[23:16] };
+            12'h0a: port_din <= { 1'b1, eth_src[15: 8] };
+            12'h0b: port_din <= { 1'b1, eth_src[ 7: 0] };
+            12'h0c: port_din <= { 1'b1, eth_type[15: 8] };
+            12'h0d: port_din <= { 1'b1, eth_type[ 7: 0] };
+            12'h17: port_din <= { 1'b1, ipv4_proto[ 7: 0] };
+            12'h1a: port_din <= { 1'b1, ipv4_src_ip[31:24] };
+            12'h1b: port_din <= { 1'b1, ipv4_src_ip[23:16] };
+            12'h1c: port_din <= { 1'b1, ipv4_src_ip[15: 8] };
+            12'h1d: port_din <= { 1'b1, ipv4_src_ip[ 7: 0] };
+            12'h1e: port_din <= { 1'b1, ipv4_dst_ip[31:24] };
+            12'h1f: port_din <= { 1'b1, ipv4_dst_ip[23:16] };
+            12'h20: port_din <= { 1'b1, ipv4_dst_ip[15: 8] };
+            12'h21: port_din <= { 1'b1, ipv4_dst_ip[ 7: 0] };
+            12'h22: port_din <= { 1'b1, tp_src_port[15: 8] };
+            12'h23: port_din <= { 1'b1, tp_src_port[ 7: 0] };
+            12'h24: port_din <= { 1'b1, tp_dst_port[15: 8] };
+            12'h25: port_din <= { 1'b1, tp_dst_port[ 7: 0] };
+            default: port_din <= dout42[8:0];
+          endcase
+        end else begin
+          port_din <= 9'h0;
+          nic_din  <= 9'h0;
+        end
       end
-      port0tx_wr_en <= fwd_port2[0];
-      port1tx_wr_en <= fwd_port2[1];
-      port2tx_wr_en <= fwd_port2[2];
-      port3tx_wr_en <= fwd_port2[3];
-      nic_wr_en     <= fwd_nic2;
     end
   end
 end
