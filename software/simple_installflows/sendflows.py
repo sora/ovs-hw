@@ -2,6 +2,8 @@
 
 import socket, struct, time, popen2, re
 
+MAX_NFLOWS = 10
+
 addr = '127.0.0.1'
 port = 3776
 host = (addr, port)
@@ -11,16 +13,21 @@ cmd = ('cat sample_dump-flows.txt')
 
 p = re.compile(r'priority=(\d+),in_port=(\d+) actions=output:(\d+)')
 while True:
-  flows = list()
-  out, stdin, err = popen2.popen3(cmd)
-  for line in out:
+  flows                 = list()
+  cnt                   = MAX_NFLOWS
+  stdout, stdin, stderr = popen2.popen3(cmd)
+  for line in stdout:
     m = p.search(line[:-1])
     if m:
       print "dump_flows (in_port: %s, output: %s)" % (m.group(2), m.group(3))
       flows.append(struct.pack('>bb', int(m.group(2)), int(m.group(3))))
+      cnt = cnt - 1
+  while cnt > 0:
+    flows.append(struct.pack('>bb', 0, 0))
+    cnt = cnt - 1
   s.sendto(''.join([str(t) for t in flows]), host)
   print "*--- --- --- --- --- --- --- ---*"
-  time.sleep(5)
+  time.sleep(3)
 
 # NXST_FLOW reply (xid=0x4):
 #  cookie=0x0, duration=677.201s, table=0, n_packets=0, n_bytes=0, idle_age=677, priority=0 actions=NORMAL
