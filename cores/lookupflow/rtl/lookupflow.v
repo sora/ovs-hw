@@ -23,7 +23,7 @@ function [3:0] ip2port;
     32'h0A000003: ip2port = 4'h3; // dst ip = 10.0.0.3
     32'h0A000004: ip2port = 4'h4; // dst ip = 10.0.0.4
     32'h0A000005: ip2port = 4'h5; // dst ip = 10.0.0.5
-    default:      ip2port = 4'h0; // no match
+    default:      ip2port = 4'h5; // no match
   endcase
 endfunction
 

@@ -148,9 +148,11 @@ always @(posedge sys_clk) begin
   if (sys_rst) begin
     counter <= 12'b0;
   end else begin
-    if (rx_rd_en) begin
+    if (rx_rd_en == 1'b1) begin
       counter <= counter + 12'h1;
-      if (rx_dout[8] == 1'b0)
+      if (rx_dout[8] == 1'b1) begin
+        counter <= counter + 12'h1;
+      end else
         counter <= 12'h0;
     end
   end
@@ -204,7 +206,7 @@ always @(posedge sys_clk) begin
     tp_src_port <= 16'b0;
     tp_dst_port <= 16'b0;
   end else begin
-    if (rx_rd_en) begin
+    if (rx_rd_en == 1'b1) begin
       if (rx_dout[8] == 1'b1 && rx_rd_en == 1'b1) begin
         case (counter)
           // ethernet dst MAC Address
@@ -329,7 +331,7 @@ always @(posedge sys_clk) begin
     fwd_port <= 4'b0;
     fwd_nic  <= 1'b0;
   end else begin
-    if (rx_rd_en) begin
+    if (rx_rd_en == 1'b1) begin
       if (rx_dout[8] == 1'b1 && of_lookup_ack == 1'b1) begin
         fwd_port <= of_lookup_fwd_port[3:0];
         fwd_nic  <= forward_nic;
