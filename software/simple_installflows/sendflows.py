@@ -2,8 +2,6 @@
 
 import socket, struct, time, popen2, re
 
-MAX_NFLOWS = 10
-
 addr = '203.178.143.1'
 port = 3776
 host = (addr, port)
@@ -13,19 +11,19 @@ cmd = ('cat sample_dump-flows.txt')
 
 p = re.compile(r'priority=(\d+),in_port=(\d+) actions=output:(\d+)')
 while True:
-  flows                 = list()
-  cnt                   = MAX_NFLOWS
   stdout, stdin, stderr = popen2.popen3(cmd)
+  flows                 = struct.pack('>bbbb', 0, 1 << 4, 2 << 4, 3 << 4)
+  data                  = [0] * 4
+  cnt                   = 1
   for line in stdout:
     m = p.search(line[:-1])
     if m:
-      print "dump_flows (in_port: %s, output: %s)" % (m.group(2), m.group(3))
-      flows.append(struct.pack('>bb', int(m.group(2)), int(m.group(3))))
-      cnt = cnt - 1
-  while cnt > 0:
-    flows.append(struct.pack('>bb', 0, 0))
-    cnt = cnt - 1
-  msg = ''.join([str(t) for t in flows])
+      print "Flow %d. (in_port: %s, output: %s)" % (cnt, m.group(2), m.group(3))
+      cnt       = cnt + 1
+      idx       = int(m.group(2))
+      val       = int(m.group(3))
+      data[idx] = data[idx] | (1 << val)
+  msg = struct.pack('>bbbb', data[0], data[1] | (1 << 4), data[2] | (2 << 4), data[3] | (3 << 4))
   s.sendto(msg, host)
   print "*--- --- --- --- --- --- --- ---*"
   time.sleep(3)

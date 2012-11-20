@@ -6,3 +6,4 @@ NXST_FLOW reply (xid=0x4):
  cookie=0x0, duration=104.973s, table=0, n_packets=0, n_bytes=0, idle_age=104, priority=106,in_port=3 actions=output:0
  cookie=0x0, duration=110.59s, table=0, n_packets=0, n_bytes=0, idle_age=110, priority=105,in_port=2 actions=output:0
  cookie=0x0, duration=117.829s, table=0, n_packets=0, n_bytes=0, idle_age=117, priority=104,in_port=1 actions=output:0
+ cookie=0x0, duration=117.829s, table=0, n_packets=0, n_bytes=0, idle_age=117, priority=107,in_port=3 actions=output:2
