@@ -4,7 +4,7 @@ import socket, struct, time, popen2, re
 
 MAX_NFLOWS = 10
 
-addr = '127.0.0.1'
+addr = '203.178.143.1'
 port = 3776
 host = (addr, port)
 s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -25,7 +25,8 @@ while True:
   while cnt > 0:
     flows.append(struct.pack('>bb', 0, 0))
     cnt = cnt - 1
-  s.sendto(''.join([str(t) for t in flows]), host)
+  msg = ''.join([str(t) for t in flows])
+  s.sendto(msg, host)
   print "*--- --- --- --- --- --- --- ---*"
   time.sleep(3)
 
