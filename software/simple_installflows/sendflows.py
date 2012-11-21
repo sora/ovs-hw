@@ -1,15 +1,17 @@
 #!/usr/bin/env python
 
-import socket, struct, time, popen2, re
+import sys, socket, struct, time, popen2, re
 
 MAGIC = struct.pack('>BBBB', 0xC0, 0xC0, 0xC0, 0xCC)
+
+argvs = sys.argv
 
 addr = '192.168.0.1'
 port = 3776
 host = (addr, port)
 s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
-cmd = ('cat sample_dump-flows.txt')
+cmd = ('cat ' + argvs[1])
 
 p = re.compile(r'priority=(\d+),in_port=(\d+) actions=output:(\d+)')
 while True:
