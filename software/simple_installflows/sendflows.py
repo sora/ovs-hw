@@ -6,12 +6,13 @@ MAGIC = struct.pack('>BBBB', 0xC0, 0xC0, 0xC0, 0xCC)
 
 argvs = sys.argv
 
-addr = '192.168.0.1'
+addr = '192.168.1.3'
 port = 3776
 host = (addr, port)
 s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
 cmd = ('cat ' + argvs[1])
+print cmd
 
 p = re.compile(r'priority=(\d+),in_port=(\d+) actions=output:(\d+)')
 while True:

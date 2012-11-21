@@ -1,1 +1,1 @@
-python sendflows.py 10.txt
+python sendflows.py data/10.out
