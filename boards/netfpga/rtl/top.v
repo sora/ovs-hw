@@ -255,12 +255,21 @@ system system_inst (
 	.gmii_1_tx_en(gmii_1_tx_en),
 	.gmii_1_rxd(gmii_1_rxd),
 	.gmii_1_rx_dv(gmii_1_rx_dv),
-	.gmii_1_rx_clk(rgmii_1_rxc)
+	.gmii_1_rx_clk(rgmii_1_rxc),
+
+	.gmii_2_txd(gmii_2_txd),
+	.gmii_2_tx_en(gmii_2_tx_en),
+	.gmii_2_rxd(gmii_2_rxd),
+	.gmii_2_rx_dv(gmii_2_rx_dv),
+	.gmii_2_rx_clk(rgmii_2_rxc),
+
+	.gmii_3_txd(gmii_3_txd),
+	.gmii_3_tx_en(gmii_3_tx_en),
+	.gmii_3_rxd(gmii_3_rxd),
+	.gmii_3_rx_dv(gmii_3_rx_dv),
+	.gmii_3_rx_clk(rgmii_3_rxc)
 
 );
-
-assign gmii_0_tx_er = 1'b0;
-assign gmii_1_tx_er = 1'b0;
 
 //assign rgmii_0_tx_ctl = rgmii0_tx_ctl;
 //assign DEBUG_PIN0     = gmii_0_tx_en; //rgmii0_tx_ctl;

@@ -83,16 +83,16 @@ always @(posedge sys_clk) begin
     p3out <= 8'b0;
   end else begin
     if (rx_dout[8] == 1'b1 && rx_rd_en == 1'b1) begin
-//      if (rx_type[15:0]        == 16'h0800 && rx_ip_version[15:0] == 16'h4500 &&
-//          rx_tp_dst_port[15:0] == 16'd3776 && rx_ipv4_proto[7:0]  == 8'h11    &&
-//          rx_magic[31:0]       == `MAGIC_CODE) begin
+      if (rx_type[15:0]        == 16'h0800 && rx_ip_version[15:0] == 16'h4500 &&
+          rx_tp_dst_port[15:0] == 16'd3776 && rx_ipv4_proto[7:0]  == 8'h11    &&
+          rx_magic[31:0]       == `MAGIC_CODE) begin
         case (counter)
           11'h2e: p0out <= rx_dout[7:0];
           11'h2f: p1out <= rx_dout[7:0];
           11'h30: p2out <= rx_dout[7:0];
           11'h31: p3out <= rx_dout[7:0];
         endcase
-//      end
+      end
     end
   end
 end

@@ -947,8 +947,7 @@ forwarder #(
   , .nic_full(rx0nic_full)
   , .nic_wr_en(rx0nic_wr_en)
 
-//  , .of_lookup_fwd_port(of_lookup_fwd_port[3:0])
-  , .of_lookup_fwd_port(4'b1111)
+  , .of_lookup_fwd_port(of_lookup_fwd_port[3:0])
 );
 
 //-----------------------------------
@@ -985,8 +984,7 @@ forwarder #(
   , .nic_full(rx1nic_full)
   , .nic_wr_en(rx1nic_wr_en)
 
-  //, .of_lookup_fwd_port(of_lookup_fwd_port[7:4])
-  , .of_lookup_fwd_port(4'b1111)
+  , .of_lookup_fwd_port(of_lookup_fwd_port[7:4])
 );
 
 //-----------------------------------
@@ -1023,8 +1021,7 @@ forwarder #(
   , .nic_full(rx2nic_full)
   , .nic_wr_en(rx2nic_wr_en)
 
-  //, .of_lookup_fwd_port(of_lookup_fwd_port[11:8])
-  , .of_lookup_fwd_port(4'b1111)
+  , .of_lookup_fwd_port(of_lookup_fwd_port[11:8])
 );
 
 //-----------------------------------
@@ -1061,8 +1058,7 @@ forwarder #(
   , .nic_full(rx3nic_full)
   , .nic_wr_en(rx3nic_wr_en)
 
-  //, .of_lookup_fwd_port(of_lookup_fwd_port[15:12])
-  , .of_lookup_fwd_port(4'b1111)
+  , .of_lookup_fwd_port(of_lookup_fwd_port[15:12])
 );
 
 
