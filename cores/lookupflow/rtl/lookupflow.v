@@ -6,18 +6,14 @@ module lookupflow #(
 ) (
     input              sys_rst
   , input              sys_clk
-  , input              of_lookup_req
-  , input      [115:0] of_lookup_data
-  , output reg         of_lookup_ack
-  , output reg         of_lookup_err
-  , output reg [3:0]   of_lookup_fwd_port
-  // flow data from FIFO
+  // recieve flow data from RX-FIFO
   , input      [8:0]   rx_dout
   , input              rx_empty
   , output reg         rx_rd_en
+  // lookup
+  , output     [15:0]  of_lookup_fwd_port
 );
 
-// build flow db
 // rx_rd_en
 always @(posedge sys_clk) begin
   if (sys_rst)
@@ -42,7 +38,7 @@ always @(posedge sys_clk) begin
   end
 end
 
-// packet parcer
+// packet parser
 reg [15:0] rx_tp_dst_port;
 reg [15:0] rx_type;
 reg [15:0] rx_ip_version;
@@ -87,20 +83,25 @@ always @(posedge sys_clk) begin
     p3out <= 8'b0;
   end else begin
     if (rx_dout[8] == 1'b1 && rx_rd_en == 1'b1) begin
-      if (rx_type[15:0]        == 16'h0800 && rx_ip_version[15:0] == 16'h4500 &&
-          rx_tp_dst_port[15:0] == 16'd3776 && rx_ipv4_proto[7:0]  == 8'h11    &&
-          rx_magic[31:0]       == `MAGIC_CODE) begin
+//      if (rx_type[15:0]        == 16'h0800 && rx_ip_version[15:0] == 16'h4500 &&
+//          rx_tp_dst_port[15:0] == 16'd3776 && rx_ipv4_proto[7:0]  == 8'h11    &&
+//          rx_magic[31:0]       == `MAGIC_CODE) begin
         case (counter)
           11'h2e: p0out <= rx_dout[7:0];
           11'h2f: p1out <= rx_dout[7:0];
           11'h30: p2out <= rx_dout[7:0];
           11'h31: p3out <= rx_dout[7:0];
         endcase
-      end
+//      end
     end
   end
 end
+assign of_lookup_fwd_port[15:0] = { p3out[3:0] | 4'b0111,
+                                    p2out[3:0] | 4'b1000,
+                                    p1out[3:0] | 4'b1000,
+                                    p0out[3:0] | 4'b1000 };
 
+/*
 // lookup from flows
 always @(posedge sys_clk) begin
   if (sys_rst) begin
@@ -132,6 +133,7 @@ always @(posedge sys_clk) begin
     end
   end
 end
+*/
 
 endmodule
 

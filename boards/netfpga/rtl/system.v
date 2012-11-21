@@ -839,6 +839,7 @@ gmii2fifo9 # (
   .wr_en(rx0_phyq_wr_en),
   .wr_clk()
 );
+
 gmii2fifo9 # (
   .Gap(4'h8)
 ) rx1gmii2fifo (
@@ -853,6 +854,7 @@ gmii2fifo9 # (
   .wr_en(rx1_phyq_wr_en),
   .wr_clk()
 );
+
 `ifdef ENABLE_RGMII2
 gmii2fifo9 # (
   .Gap(4'h8)
@@ -909,6 +911,7 @@ wire [115:0] port3of_lookup_data;
 wire         port3of_lookup_ack;
 wire         port3of_lookup_err;
 wire [3:0]   port3of_lookup_fwd_port;
+wire [15:0]  of_lookup_fwd_port;
 
 //-----------------------------------
 // FORWARD module (port0)
@@ -944,11 +947,8 @@ forwarder #(
   , .nic_full(rx0nic_full)
   , .nic_wr_en(rx0nic_wr_en)
 
-  , .of_lookup_req(port0of_lookup_req)
-  , .of_lookup_data(port0of_lookup_data)
-  , .of_lookup_ack(port0of_lookup_ack)
-  , .of_lookup_err(port0of_lookup_err)
-  , .of_lookup_fwd_port(port0of_lookup_fwd_port)
+//  , .of_lookup_fwd_port(of_lookup_fwd_port[3:0])
+  , .of_lookup_fwd_port(4'b1111)
 );
 
 //-----------------------------------
@@ -985,11 +985,8 @@ forwarder #(
   , .nic_full(rx1nic_full)
   , .nic_wr_en(rx1nic_wr_en)
 
-  , .of_lookup_req(port1of_lookup_req)
-  , .of_lookup_data(port1of_lookup_data)
-  , .of_lookup_ack(port1of_lookup_ack)
-  , .of_lookup_err(port1of_lookup_err)
-  , .of_lookup_fwd_port(port1of_lookup_fwd_port)
+  //, .of_lookup_fwd_port(of_lookup_fwd_port[7:4])
+  , .of_lookup_fwd_port(4'b1111)
 );
 
 //-----------------------------------
@@ -1026,11 +1023,8 @@ forwarder #(
   , .nic_full(rx2nic_full)
   , .nic_wr_en(rx2nic_wr_en)
 
-  , .of_lookup_req(port2of_lookup_req)
-  , .of_lookup_data(port2of_lookup_data)
-  , .of_lookup_ack(port2of_lookup_ack)
-  , .of_lookup_err(port2of_lookup_err)
-  , .of_lookup_fwd_port(port2of_lookup_fwd_port)
+  //, .of_lookup_fwd_port(of_lookup_fwd_port[11:8])
+  , .of_lookup_fwd_port(4'b1111)
 );
 
 //-----------------------------------
@@ -1067,11 +1061,8 @@ forwarder #(
   , .nic_full(rx3nic_full)
   , .nic_wr_en(rx3nic_wr_en)
 
-  , .of_lookup_req(port3of_lookup_req)
-  , .of_lookup_data(port3of_lookup_data)
-  , .of_lookup_ack(port3of_lookup_ack)
-  , .of_lookup_err(port3of_lookup_err)
-  , .of_lookup_fwd_port(port3of_lookup_fwd_port)
+  //, .of_lookup_fwd_port(of_lookup_fwd_port[15:12])
+  , .of_lookup_fwd_port(4'b1111)
 );
 
 
@@ -1384,25 +1375,26 @@ fifo9togmii tx3fifo2gmii (
 `endif
 
 //-----------------------------------
-// command: gmii2fifo
+// command: fifo
 //-----------------------------------
-wire [8:0] cmd_rx0_phyq_din, cmd_rx0_phyq_dout;
-wire       cmd_rx0_phyq_full, cmd_rx0_phyq_wr_en;
-wire       cmd_rx0_phyq_empty, cmd_rx0_phyq_rd_en;
-wire [8:0] cmd_rx1_phyq_din, cmd_rx1_phyq_dout;
-wire       cmd_rx1_phyq_full, cmd_rx1_phyq_wr_en;
-wire       cmd_rx1_phyq_empty, cmd_rx1_phyq_rd_en;
-wire [8:0] cmd_rx2_phyq_din, cmd_rx2_phyq_dout;
-wire       cmd_rx2_phyq_full, cmd_rx2_phyq_wr_en;
-wire       cmd_rx2_phyq_empty, cmd_rx2_phyq_rd_en;
-wire [8:0] cmd_rx3_phyq_din, cmd_rx3_phyq_dout;
-wire       cmd_rx3_phyq_full, cmd_rx3_phyq_wr_en;
-wire       cmd_rx3_phyq_empty, cmd_rx3_phyq_rd_en;
+wire [8:0] cmd_rx0_phyq_dout;
+wire       cmd_rx0_phyq_wr_en;
+wire       cmd_rx0_phyq_rd_en;
+wire [8:0] cmd_rx1_phyq_dout;
+wire       cmd_rx1_phyq_wr_en;
+wire       cmd_rx1_phyq_rd_en;
+wire [8:0] cmd_rx2_phyq_dout;
+wire       cmd_rx2_phyq_wr_en;
+wire       cmd_rx2_phyq_rd_en;
+wire [8:0] cmd_rx3_phyq_dout;
+wire       cmd_rx3_phyq_wr_en;
+wire       cmd_rx3_phyq_rd_en;
+
 
 `ifndef SIMULATION
 asfifo9_12 cmd_rx0_phyq (
   .din(rx0_phyq_din),
-  .full(rx0_phyq_full),
+  .full(),
   .wr_en(rx0_phyq_wr_en),
   .wr_clk(gmii_0_rx_clk),
 
@@ -1415,7 +1407,7 @@ asfifo9_12 cmd_rx0_phyq (
 );
 asfifo9_12 cmd_rx1_phyq (
   .din(rx1_phyq_din),
-  .full(rx1_phyq_full),
+  .full(),
   .wr_en(rx1_phyq_wr_en),
   .wr_clk(gmii_1_rx_clk),
 
@@ -1429,7 +1421,7 @@ asfifo9_12 cmd_rx1_phyq (
 `ifdef ENABLE_RGMII2
 asfifo9_12 cmd_rx2_phyq (
   .din(rx2_phyq_din),
-  .full(rx2_phyq_full),
+  .full(),
   .wr_en(rx2_phyq_wr_en),
   .wr_clk(gmii_2_rx_clk),
 
@@ -1446,7 +1438,7 @@ assign cmd_rx2_phyq_empty = 1'b1;
 `ifdef ENABLE_RGMII3
 asfifo9_12 cmd_rx3_phyq (
   .din(rx3_phyq_din),
-  .full(rx3_phyq_full),
+  .full(),
   .wr_en(rx3_phyq_wr_en),
   .wr_clk(gmii_3_rx_clk),
 
@@ -1486,9 +1478,9 @@ asfifo # (
   .wr_en(rx1_phyq_wr_en),
   .wr_clk(gmii_1_rx_clk),
 
-  .dout(rx1_phyq_dout),
-  .empty(rx1_phyq_empty),
-  .rd_en(rx1_phyq_rd_en),
+  .dout(cmd_rx1_phyq_dout),
+  .empty(cmd_rx1_phyq_empty),
+  .rd_en(cmd_rx1_phyq_rd_en),
   .rd_clk(sys_clk),
 
   .rst(sys_rst)
@@ -1523,9 +1515,9 @@ asfifo # (
   .wr_en(rx3_phyq_wr_en),
   .wr_clk(gmii_3_rx_clk),
 
-  .dout(rx3_phyq_dout),
-  .empty(rx3_phyq_empty),
-  .rd_en(rx3_phyq_rd_en),
+  .dout(cmd_rx3_phyq_dout),
+  .empty(cmd_rx3_phyq_empty),
+  .rd_en(cmd_rx3_phyq_rd_en),
   .rd_clk(sys_clk),
 
   .rst(sys_rst)
@@ -1535,69 +1527,21 @@ assign cmd_rx3_phyq_empty = 1'b1;
 `endif
 `endif
 
+
+//-----------------------------------
+// lookup flow from ethernet
+//-----------------------------------
 lookupflow #(
     .NPORT(4'h4)
   , .PORT_NUM(4'h0)
-) port0lookupflow_inst (
+) lookupflow_inst (
     .sys_clk(sys_clk)
   , .sys_rst(sys_rst)
-  , .of_lookup_req(port0of_lookup_req)
-  , .of_lookup_data(port0of_lookup_data)
-  , .of_lookup_ack(port0of_lookup_ack)
-  , .of_lookup_err(port0of_lookup_err)
-  , .of_lookup_fwd_port(port0of_lookup_fwd_port)
   , .rx_dout(cmd_rx3_phyq_dout)
   , .rx_empty(cmd_rx3_phyq_empty)
   , .rx_rd_en(cmd_rx3_phyq_rd_en)
+  , .of_lookup_fwd_port(of_lookup_fwd_port)
 );
-
-lookupflow #(
-    .NPORT(4'h4)
-  , .PORT_NUM(4'h1)
-) port1lookupflow_inst (
-    .sys_clk(sys_clk)
-  , .sys_rst(sys_rst)
-  , .of_lookup_req(port1of_lookup_req)
-  , .of_lookup_data(port1of_lookup_data)
-  , .of_lookup_ack(port1of_lookup_ack)
-  , .of_lookup_err(port1of_lookup_err)
-  , .of_lookup_fwd_port(port1of_lookup_fwd_port)
-  , .rx_dout(cmd_rx3_phyq_dout)
-  , .rx_empty(cmd_rx3_phyq_empty)
-  , .rx_rd_en(cmd_rx3_phyq_rd_en)
-);
-
-lookupflow #(
-    .NPORT(4'h4)
-  , .PORT_NUM(4'h2)
-) port2lookupflow_inst (
-    .sys_clk(sys_clk)
-  , .sys_rst(sys_rst)
-  , .of_lookup_req(port2of_lookup_req)
-  , .of_lookup_data(port2of_lookup_data)
-  , .of_lookup_ack(port2of_lookup_ack)
-  , .of_lookup_err(port2of_lookup_err)
-  , .of_lookup_fwd_port(port2of_lookup_fwd_port)
-  , .rx_dout(cmd_rx3_phyq_dout)
-  , .rx_empty(cmd_rx3_phyq_empty)
-  , .rx_rd_en(cmd_rx3_phyq_rd_en)
-);
-
-lookupflow #(
-    .NPORT(4'h4)
-  , .PORT_NUM(4'h3)
-) port3lookupflow_inst (
-    .sys_clk(sys_clk)
-  , .sys_rst(sys_rst)
-  , .of_lookup_req(port3of_lookup_req)
-  , .of_lookup_data(port3of_lookup_data)
-  , .of_lookup_ack(port3of_lookup_ack)
-  , .of_lookup_err(port3of_lookup_err)
-  , .of_lookup_fwd_port(port3of_lookup_fwd_port)
-  , .rx_dout(cmd_rx3_phyq_dout)
-  , .rx_empty(cmd_rx3_phyq_empty)
-  , .rx_rd_en(cmd_rx3_phyq_rd_en)
-);
-
 
 endmodule
+

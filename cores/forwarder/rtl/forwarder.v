@@ -24,12 +24,16 @@ module forwarder #(
   , output reg [8:0] nic_din
   , input            nic_full
   , output reg       nic_wr_en
+// flow lookup
+  , input      [3:0] of_lookup_fwd_port
+/*
 // flow entries for lookup
   , output reg             of_lookup_req
   , output reg [115:0]     of_lookup_data
   , input                  of_lookup_ack
   , input                  of_lookup_err
   , input      [NPORT-1:0] of_lookup_fwd_port
+*/
 );
 
 /*
@@ -74,7 +78,7 @@ end
 //-----------------------------------
 // on data processing
 //-----------------------------------
-reg in_frame;
+reg  in_frame;
 wire in_process = (in_frame == 1'b1 || rx_rd_en == 1'b1);
 
 //-----------------------------------
@@ -256,89 +260,9 @@ always @(posedge sys_clk) begin
   end
 end
 
-//-----------------------------------
-// lookup requests
-//-----------------------------------
-always @(posedge sys_clk) begin
-  if (sys_rst) begin
-    of_lookup_req <= 1'b0;
-  end else begin
-    of_lookup_req <= 1'b0;
-    if (counter == 12'h26)
-      of_lookup_req <= 1'b1;
-  end
-end
 
-//-----------------------------------
-// lookup data
-// demo: 4(ingressport) + 48(srcmac) +  32(dstip) + 32(srcip) = 116
-//-----------------------------------
-wire [11:0] vlan_id       = 12'b0;
-wire [2:0]  vlan_priority = 3'b0;
-/*
-assign of_lookup_data[242:0] = { 4'h0, eth_src, eth_dst, eth_type, vlan_id, vlan_priority,
-                          ipv4_src_ip, ipv4_dst_ip, ipv4_proto, ipv4_tos,
-                          tp_src_port, tp_dst_port };
-*/
-always @(posedge sys_clk) begin
-  if (sys_rst) begin
-    of_lookup_data <= 116'b0;
-  end else begin
-    case (counter)
-      12'h01: of_lookup_data[115:112] <= 4'h0;
-      12'h0c: of_lookup_data[111: 64] <= eth_src[47:0];
-      12'h1e: of_lookup_data[ 63: 32] <= ipv4_src_ip[31:0];
-      12'h22: of_lookup_data[ 31:  0] <= ipv4_dst_ip[31:0];
-    endcase
-  end
-end
-
-/*
-always @(posedge sys_clk) begin
-  if (sys_rst) begin
-    of_lookup_data <= 243'b0;
-  end else begin
-    if (rx_rd_en && rx_dout[8]) begin
-      case (counter)
-        12'h00: of_lookup_data[242:239] <= PORT_NUM;
-        12'h05: of_lookup_data[238:191] <= { eth_src[47:8], rx_dout[7:0] };
-        12'h0b: of_lookup_data[190:143] <= { eth_dst[47:8], rx_dout[7:0] };
-        12'h0d: begin
-          of_lookup_data[142:127] <= { eth_type[15:8], rx_dout[7:0] };
-          of_lookup_data[126:115] <= 12'h0;
-          of_lookup_data[114:112] <= 3'h0;
-        end
-        12'h0f: of_lookup_data[ 39:32] <= rx_dout[7:0]; // ipv4_tos
-        12'h17: of_lookup_data[ 47:40] <= rx_dout[7:0]; // ipv4_proto
-        12'h1d: of_lookup_data[111:80] <= { ipv4_src_ip[31:8], rx_dout[7:0] };
-        12'h21: of_lookup_data[ 79:48] <= { ipv4_dst_ip[31:8], rx_dout[7:0] };
-        12'h23: of_lookup_data[ 31:16] <= { tp_src_port[31:8], rx_dout[7:0] };
-        12'h25: of_lookup_data[ 15: 0] <= { tp_dst_port[31:8], rx_dout[7:0] };
-      endcase
-    end
-  end
-end
-*/
-
-//-----------------------------------
-// lookup response (return forwarding ports)
-//-----------------------------------
-reg [3:0] fwd_port;
-reg       fwd_nic;
-wire      forward_nic = 1'b0;
-always @(posedge sys_clk) begin
-  if (sys_rst) begin
-    fwd_port <= 4'b0;
-    fwd_nic  <= 1'b0;
-  end else begin
-    if (rx_rd_en == 1'b1) begin
-      if (rx_dout[8] == 1'b1 && of_lookup_ack == 1'b1) begin
-        fwd_port <= of_lookup_fwd_port[3:0];
-        fwd_nic  <= forward_nic;
-      end
-    end
-  end
-end
+wire [3:0] fwd_port = of_lookup_fwd_port;
+wire [3:0] fwd_nic  = 4'b0;
 
 //-----------------------------------
 // TX write enable

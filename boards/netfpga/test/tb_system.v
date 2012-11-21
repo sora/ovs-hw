@@ -42,8 +42,8 @@ system system_inst (
 
   , .gmii_0_txd(gmii_0_txd)
   , .gmii_0_tx_en(gmii_0_tx_en)
-  , .gmii_0_rxd(phy_rxd)
-  , .gmii_0_rx_dv(phy_rx_dv)
+  , .gmii_0_rxd(8'h0)
+  , .gmii_0_rx_dv(1'b0)
   , .gmii_0_rx_clk(phy_rx_clk)
 
   , .gmii_1_txd(gmii_1_txd)
@@ -54,8 +54,8 @@ system system_inst (
 
   , .gmii_2_txd(gmii_2_txd)
   , .gmii_2_tx_en(gmii_2_tx_en)
-  , .gmii_2_rxd(8'h00)
-  , .gmii_2_rx_dv(1'b0)
+  , .gmii_2_rxd(phy_rxd)
+  , .gmii_2_rx_dv(phy_rx_dv)
   , .gmii_2_rx_clk(phy_rx_clk)
 
   , .gmii_3_txd(gmii_3_txd)
