@@ -2,58 +2,52 @@
 `include "../rtl/setup.v"
 
 module system #(
-  parameter MaxPort = 2'h3
+    parameter MaxPort = 2'h3
 ) (
-  input         sys_rst,
-  input         sys_clk,
-
-  input         gmii_tx_clk,
-
+    input         sys_rst
+  , input         sys_clk
+  , input         gmii_tx_clk
   // GMII interfaces for 4 MACs
-  output [7:0]  gmii_0_txd,
-  output        gmii_0_tx_en,
-  input  [7:0]  gmii_0_rxd,
-  input         gmii_0_rx_dv,
-  input         gmii_0_rx_clk,
+  , output [7:0]  gmii_0_txd
+  , output        gmii_0_tx_en
+  , input  [7:0]  gmii_0_rxd
+  , input         gmii_0_rx_dv
+  , input         gmii_0_rx_clk
 
-  output [7:0]  gmii_1_txd,
-  output        gmii_1_tx_en,
-  input  [7:0]  gmii_1_rxd,
-  input         gmii_1_rx_dv,
-  input         gmii_1_rx_clk,
+  , output [7:0]  gmii_1_txd
+  , output        gmii_1_tx_en
+  , input  [7:0]  gmii_1_rxd
+  , input         gmii_1_rx_dv
+  , input         gmii_1_rx_clk
 
-  output [7:0]  gmii_2_txd,
-  output        gmii_2_tx_en,
-  input  [7:0]  gmii_2_rxd,
-  input         gmii_2_rx_dv,
-  input         gmii_2_rx_clk,
+  , output [7:0]  gmii_2_txd
+  , output        gmii_2_tx_en
+  , input  [7:0]  gmii_2_rxd
+  , input         gmii_2_rx_dv
+  , input         gmii_2_rx_clk
 
-  output [7:0]  gmii_3_txd,
-  output        gmii_3_tx_en,
-  input  [7:0]  gmii_3_rxd,
-  input         gmii_3_rx_dv,
-  input         gmii_3_rx_clk
-
+  , output [7:0]  gmii_3_txd
+  , output        gmii_3_tx_en
+  , input  [7:0]  gmii_3_rxd
+  , input         gmii_3_rx_dv
+  , input         gmii_3_rx_clk
 );
 
 //-----------------------------------
 // RX0,RX1,RX2,RX3_PHYQ FIFO
 //-----------------------------------
 wire [8:0] rx0_phyq_din, rx0_phyq_dout;
-wire rx0_phyq_full, rx0_phyq_wr_en;
-wire rx0_phyq_empty, rx0_phyq_rd_en;
-
+wire       rx0_phyq_full, rx0_phyq_wr_en;
+wire       rx0_phyq_empty, rx0_phyq_rd_en;
 wire [8:0] rx1_phyq_din, rx1_phyq_dout;
-wire rx1_phyq_full, rx1_phyq_wr_en;
-wire rx1_phyq_empty, rx1_phyq_rd_en;
-
+wire       rx1_phyq_full, rx1_phyq_wr_en;
+wire       rx1_phyq_empty, rx1_phyq_rd_en;
 wire [8:0] rx2_phyq_din, rx2_phyq_dout;
-wire rx2_phyq_full, rx2_phyq_wr_en;
-wire rx2_phyq_empty, rx2_phyq_rd_en;
-
+wire       rx2_phyq_full, rx2_phyq_wr_en;
+wire       rx2_phyq_empty, rx2_phyq_rd_en;
 wire [8:0] rx3_phyq_din, rx3_phyq_dout;
-wire rx3_phyq_full, rx3_phyq_wr_en;
-wire rx3_phyq_empty, rx3_phyq_rd_en;
+wire       rx3_phyq_full, rx3_phyq_wr_en;
+wire       rx3_phyq_empty, rx3_phyq_rd_en;
 
 `ifndef SIMULATION
 asfifo9_12 rx0_phyq (
@@ -916,58 +910,6 @@ wire         port3of_lookup_ack;
 wire         port3of_lookup_err;
 wire [3:0]   port3of_lookup_fwd_port;
 
-lookupflow #(
-    .NPORT(4'h4)
-  , .PORT_NUM(4'b0001)
-) port0lookupflow_inst (
-    .sys_clk(sys_clk)
-  , .sys_rst(sys_rst)
-  , .of_lookup_req(port0of_lookup_req)
-  , .of_lookup_data(port0of_lookup_data)
-  , .of_lookup_ack(port0of_lookup_ack)
-  , .of_lookup_err(port0of_lookup_err)
-  , .of_lookup_fwd_port(port0of_lookup_fwd_port)
-);
-
-lookupflow #(
-    .NPORT(4'h4)
-  , .PORT_NUM(4'b0010)
-) port1lookupflow_inst (
-    .sys_clk(sys_clk)
-  , .sys_rst(sys_rst)
-  , .of_lookup_req(port1of_lookup_req)
-  , .of_lookup_data(port1of_lookup_data)
-  , .of_lookup_ack(port1of_lookup_ack)
-  , .of_lookup_err(port1of_lookup_err)
-  , .of_lookup_fwd_port(port1of_lookup_fwd_port)
-);
-
-lookupflow #(
-    .NPORT(4'h4)
-  , .PORT_NUM(4'b0100)
-) port2lookupflow_inst (
-    .sys_clk(sys_clk)
-  , .sys_rst(sys_rst)
-  , .of_lookup_req(port2of_lookup_req)
-  , .of_lookup_data(port2of_lookup_data)
-  , .of_lookup_ack(port2of_lookup_ack)
-  , .of_lookup_err(port2of_lookup_err)
-  , .of_lookup_fwd_port(port2of_lookup_fwd_port)
-);
-
-lookupflow #(
-    .NPORT(4'h4)
-  , .PORT_NUM(4'b1000)
-) port3lookupflow_inst (
-    .sys_clk(sys_clk)
-  , .sys_rst(sys_rst)
-  , .of_lookup_req(port3of_lookup_req)
-  , .of_lookup_data(port3of_lookup_data)
-  , .of_lookup_ack(port3of_lookup_ack)
-  , .of_lookup_err(port3of_lookup_err)
-  , .of_lookup_fwd_port(port3of_lookup_fwd_port)
-);
-
 //-----------------------------------
 // FORWARD module (port0)
 //-----------------------------------
@@ -1441,6 +1383,221 @@ fifo9togmii tx3fifo2gmii (
 );
 `endif
 
+//-----------------------------------
+// command: gmii2fifo
+//-----------------------------------
+wire [8:0] cmd_rx0_phyq_din, cmd_rx0_phyq_dout;
+wire       cmd_rx0_phyq_full, cmd_rx0_phyq_wr_en;
+wire       cmd_rx0_phyq_empty, cmd_rx0_phyq_rd_en;
+wire [8:0] cmd_rx1_phyq_din, cmd_rx1_phyq_dout;
+wire       cmd_rx1_phyq_full, cmd_rx1_phyq_wr_en;
+wire       cmd_rx1_phyq_empty, cmd_rx1_phyq_rd_en;
+wire [8:0] cmd_rx2_phyq_din, cmd_rx2_phyq_dout;
+wire       cmd_rx2_phyq_full, cmd_rx2_phyq_wr_en;
+wire       cmd_rx2_phyq_empty, cmd_rx2_phyq_rd_en;
+wire [8:0] cmd_rx3_phyq_din, cmd_rx3_phyq_dout;
+wire       cmd_rx3_phyq_full, cmd_rx3_phyq_wr_en;
+wire       cmd_rx3_phyq_empty, cmd_rx3_phyq_rd_en;
+
+`ifndef SIMULATION
+asfifo9_12 cmd_rx0_phyq (
+  .din(rx0_phyq_din),
+  .full(rx0_phyq_full),
+  .wr_en(rx0_phyq_wr_en),
+  .wr_clk(gmii_0_rx_clk),
+
+  .dout(cmd_rx0_phyq_dout),
+  .empty(cmd_rx0_phyq_empty),
+  .rd_en(cmd_rx0_phyq_rd_en),
+  .rd_clk(sys_clk),
+
+  .rst(sys_rst)
+);
+asfifo9_12 cmd_rx1_phyq (
+  .din(rx1_phyq_din),
+  .full(rx1_phyq_full),
+  .wr_en(rx1_phyq_wr_en),
+  .wr_clk(gmii_1_rx_clk),
+
+  .dout(cmd_rx1_phyq_dout),
+  .empty(cmd_rx1_phyq_empty),
+  .rd_en(cmd_rx1_phyq_rd_en),
+  .rd_clk(sys_clk),
+
+  .rst(sys_rst)
+);
+`ifdef ENABLE_RGMII2
+asfifo9_12 cmd_rx2_phyq (
+  .din(rx2_phyq_din),
+  .full(rx2_phyq_full),
+  .wr_en(rx2_phyq_wr_en),
+  .wr_clk(gmii_2_rx_clk),
+
+  .dout(cmd_rx2_phyq_dout),
+  .empty(cmd_rx2_phyq_empty),
+  .rd_en(cmd_rx2_phyq_rd_en),
+  .rd_clk(sys_clk),
+
+  .rst(sys_rst)
+);
+`else
+assign cmd_rx2_phyq_empty = 1'b1;
+`endif
+`ifdef ENABLE_RGMII3
+asfifo9_12 cmd_rx3_phyq (
+  .din(rx3_phyq_din),
+  .full(rx3_phyq_full),
+  .wr_en(rx3_phyq_wr_en),
+  .wr_clk(gmii_3_rx_clk),
+
+  .dout(cmd_rx3_phyq_dout),
+  .empty(cmd_rx3_phyq_empty),
+  .rd_en(cmd_rx3_phyq_rd_en),
+  .rd_clk(sys_clk),
+
+  .rst(sys_rst)
+);
+`else
+assign cmd_rx3_phyq_empty = 1'b1;
+`endif
+`else
+asfifo # (
+  .DATA_WIDTH(9),
+  .ADDRESS_WIDTH(12)
+) cmd_rx0fifo (
+  .din(rx0_phyq_din),
+  .full(rx0_phyq_full),
+  .wr_en(rx0_phyq_wr_en),
+  .wr_clk(gmii_0_rx_clk),
+
+  .dout(cmd_rx0_phyq_dout),
+  .empty(cmd_rx0_phyq_empty),
+  .rd_en(cmd_rx0_phyq_rd_en),
+  .rd_clk(sys_clk),
+
+  .rst(sys_rst)
+);
+asfifo # (
+  .DATA_WIDTH(9),
+  .ADDRESS_WIDTH(12)
+) cmd_rx1fifo (
+  .din(rx1_phyq_din),
+  .full(rx1_phyq_full),
+  .wr_en(rx1_phyq_wr_en),
+  .wr_clk(gmii_1_rx_clk),
+
+  .dout(rx1_phyq_dout),
+  .empty(rx1_phyq_empty),
+  .rd_en(rx1_phyq_rd_en),
+  .rd_clk(sys_clk),
+
+  .rst(sys_rst)
+);
+`ifdef ENABLE_RGMII2
+asfifo # (
+  .DATA_WIDTH(9),
+  .ADDRESS_WIDTH(12)
+) cmd_rx2fifo (
+  .din(rx2_phyq_din),
+  .full(rx2_phyq_full),
+  .wr_en(rx2_phyq_wr_en),
+  .wr_clk(gmii_2_rx_clk),
+
+  .dout(cmd_rx2_phyq_dout),
+  .empty(cmd_rx2_phyq_empty),
+  .rd_en(cmd_rx2_phyq_rd_en),
+  .rd_clk(sys_clk),
+
+  .rst(sys_rst)
+);
+`else
+assign cmd_rx2_phyq_empty = 1'b1;
+`endif
+`ifdef ENABLE_RGMII3
+asfifo # (
+  .DATA_WIDTH(9),
+  .ADDRESS_WIDTH(12)
+) cmd_rx3fifo (
+  .din(rx3_phyq_din),
+  .full(rx3_phyq_full),
+  .wr_en(rx3_phyq_wr_en),
+  .wr_clk(gmii_3_rx_clk),
+
+  .dout(rx3_phyq_dout),
+  .empty(rx3_phyq_empty),
+  .rd_en(rx3_phyq_rd_en),
+  .rd_clk(sys_clk),
+
+  .rst(sys_rst)
+);
+`else
+assign cmd_rx3_phyq_empty = 1'b1;
+`endif
+`endif
+
+lookupflow #(
+    .NPORT(4'h4)
+  , .PORT_NUM(4'h0)
+) port0lookupflow_inst (
+    .sys_clk(sys_clk)
+  , .sys_rst(sys_rst)
+  , .of_lookup_req(port0of_lookup_req)
+  , .of_lookup_data(port0of_lookup_data)
+  , .of_lookup_ack(port0of_lookup_ack)
+  , .of_lookup_err(port0of_lookup_err)
+  , .of_lookup_fwd_port(port0of_lookup_fwd_port)
+  , .rx_dout(cmd_rx3_phyq_dout)
+  , .rx_empty(cmd_rx3_phyq_empty)
+  , .rx_rd_en(cmd_rx3_phyq_rd_en)
+);
+
+lookupflow #(
+    .NPORT(4'h4)
+  , .PORT_NUM(4'h1)
+) port1lookupflow_inst (
+    .sys_clk(sys_clk)
+  , .sys_rst(sys_rst)
+  , .of_lookup_req(port1of_lookup_req)
+  , .of_lookup_data(port1of_lookup_data)
+  , .of_lookup_ack(port1of_lookup_ack)
+  , .of_lookup_err(port1of_lookup_err)
+  , .of_lookup_fwd_port(port1of_lookup_fwd_port)
+  , .rx_dout(cmd_rx3_phyq_dout)
+  , .rx_empty(cmd_rx3_phyq_empty)
+  , .rx_rd_en(cmd_rx3_phyq_rd_en)
+);
+
+lookupflow #(
+    .NPORT(4'h4)
+  , .PORT_NUM(4'h2)
+) port2lookupflow_inst (
+    .sys_clk(sys_clk)
+  , .sys_rst(sys_rst)
+  , .of_lookup_req(port2of_lookup_req)
+  , .of_lookup_data(port2of_lookup_data)
+  , .of_lookup_ack(port2of_lookup_ack)
+  , .of_lookup_err(port2of_lookup_err)
+  , .of_lookup_fwd_port(port2of_lookup_fwd_port)
+  , .rx_dout(cmd_rx3_phyq_dout)
+  , .rx_empty(cmd_rx3_phyq_empty)
+  , .rx_rd_en(cmd_rx3_phyq_rd_en)
+);
+
+lookupflow #(
+    .NPORT(4'h4)
+  , .PORT_NUM(4'h3)
+) port3lookupflow_inst (
+    .sys_clk(sys_clk)
+  , .sys_rst(sys_rst)
+  , .of_lookup_req(port3of_lookup_req)
+  , .of_lookup_data(port3of_lookup_data)
+  , .of_lookup_ack(port3of_lookup_ack)
+  , .of_lookup_err(port3of_lookup_err)
+  , .of_lookup_fwd_port(port3of_lookup_fwd_port)
+  , .rx_dout(cmd_rx3_phyq_dout)
+  , .rx_empty(cmd_rx3_phyq_empty)
+  , .rx_rd_en(cmd_rx3_phyq_rd_en)
+);
 
 
 endmodule

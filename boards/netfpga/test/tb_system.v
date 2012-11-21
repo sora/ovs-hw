@@ -30,8 +30,8 @@ always #8 phy_tx_clk = ~phy_tx_clk;
 
 
 reg sys_rst;
-reg phy_rx_dv;
-reg [7:0] phy_rxd;
+reg phy_rx_dv, phy_cmd_rx_dv;
+reg [7:0] phy_rxd, phy_cmd_rxd;
 wire [7:0] gmii_0_txd, gmii_1_txd, gmii_2_txd, gmii_3_txd;
 wire gmii_0_tx_en, gmii_1_tx_en, gmii_2_tx_en, gmii_3_tx_en;
 
@@ -60,8 +60,8 @@ system system_inst (
 
   , .gmii_3_txd(gmii_3_txd)
   , .gmii_3_tx_en(gmii_3_tx_en)
-  , .gmii_3_rxd(8'h00)
-  , .gmii_3_rx_dv(1'b0)
+  , .gmii_3_rxd(phy_cmd_rxd)
+  , .gmii_3_rx_dv(phy_cmd_rx_dv)
   , .gmii_3_rx_clk(phy_rx_clk)
 );
 
@@ -79,18 +79,21 @@ always @(posedge Wclk) begin
 end
 */
 
-reg [11:0] rom [0:4095];
+reg [11:0] rom  [0:4095];
+reg [11:0] rom2 [0:4095];
 reg [11:0] counter;
 
 always @(posedge phy_rx_clk) begin
   {phy_rx_dv, phy_rxd} <= rom[counter];
+  {phy_cmd_rx_dv, phy_cmd_rxd} <= rom2[counter];
   counter <= counter + 1;
 end
 
 initial begin
   $dumpfile("./test.vcd");
-  $dumpvars(0, tb_system); 
+  $dumpvars(0, tb_system);
   $readmemh("./phy_pingto5hosts.hex", rom);
+  $readmemh("./phy_cmd.hex", rom2);
 //  $readmemh("./phy_test.hex", rom);
   /* Reset / Initialize our logic */
   sys_rst = 1'b1;

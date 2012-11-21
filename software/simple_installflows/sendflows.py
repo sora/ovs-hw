@@ -2,7 +2,9 @@
 
 import socket, struct, time, popen2, re
 
-addr = '203.178.143.1'
+MAGIC = struct.pack('>BBBB', 0xC0, 0xC0, 0xC0, 0xCC)
+
+addr = '192.168.0.1'
 port = 3776
 host = (addr, port)
 s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -12,18 +14,17 @@ cmd = ('cat sample_dump-flows.txt')
 p = re.compile(r'priority=(\d+),in_port=(\d+) actions=output:(\d+)')
 while True:
   stdout, stdin, stderr = popen2.popen3(cmd)
-  flows                 = struct.pack('>bbbb', 0, 1 << 4, 2 << 4, 3 << 4)
-  data                  = [0] * 4
+  flows                 = [0] * 4
   cnt                   = 1
   for line in stdout:
     m = p.search(line[:-1])
     if m:
       print "Flow %d. (in_port: %s, output: %s)" % (cnt, m.group(2), m.group(3))
-      cnt       = cnt + 1
-      idx       = int(m.group(2))
-      val       = int(m.group(3))
-      data[idx] = data[idx] | (1 << val)
-  msg = struct.pack('>bbbb', data[0], data[1] | (1 << 4), data[2] | (2 << 4), data[3] | (3 << 4))
+      cnt           = cnt + 1
+      inport        = int(m.group(2))
+      output        = int(m.group(3))
+      flows[inport] = flows[inport] | (1 << output)
+  msg = MAGIC + struct.pack('>bbbb', flows[0], flows[1] | (1 << 4), flows[2] | (2 << 4), flows[3] | (3 << 4))
   s.sendto(msg, host)
   print "*--- --- --- --- --- --- --- ---*"
   time.sleep(3)
