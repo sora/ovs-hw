@@ -2,6 +2,7 @@
 !.keep_me
 *.swp
 a.out
+.DS_Store
 
 # lattice
 .run_manager.ini
@@ -23,3 +24,6 @@ syntmp
 t_data.hex
 test.vcd
 tb_system
+
+# xilinx
+build
