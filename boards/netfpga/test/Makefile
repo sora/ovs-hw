@@ -12,7 +12,6 @@ SOURCES=tb_system.v \
 	$(wildcard ../../../cores/arp/rtl/*.v) \
 	$(wildcard ../../../cores/mixer/rtl/*.v) 
 
-#all: cversim
 all: phy_test.hex isim
 
 gtk: all
@@ -29,6 +28,9 @@ phy_test.hex: phy_ping.hex phy_telnet.hex
 
 cversim: $(SOURCES)
 	cver $(SOURCES)
+
+lint:
+	verilator --lint-only ${SOURCES}
 
 clean:
 	rm -f tb_system verilog.log test.vcd phy_test.hex

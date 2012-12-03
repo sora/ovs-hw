@@ -21,7 +21,7 @@ NetFPGA-1G
 
 * [Xilinx ISE 10.1SP3](http://www.xilinx.com/support/download/index.htm)
 
-Lattice ECP3 Verse
+~~Lattice ECP3 Verse~~
 
 * [Lattice Diamond](http://www.latticesemi.com/products/designsoftware/diamond/downloads.cfm)
 
@@ -32,17 +32,22 @@ Simulation tool on Mac and Linux
 * [GTKWave](http://gtkwave.sourceforge.net/) -- `brew install gtkwave`
 * [Verilator](http://www.veripool.org/wiki/verilator) -- `brew install verilator`
 
-### How to build
+### Quickstart (Simulation and FPGA configuration)
+
+lint
+
+    $ brew install verilator
+    $ make lint
 
 testbench
 
     $ brew install icarus-verilog gplcver gtkwave
     $ make test
-    $ gtkwave test.vcd
 
-lint only
+build
 
-    $ brew install verilator
-    $ make lint
+    $ make bit
 
-### Quickstart (build and FPGA configuration)
+load
+
+    $ make load

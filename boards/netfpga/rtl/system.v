@@ -1503,7 +1503,7 @@ asfifo # (
     .DATA_WIDTH(9)
   , .ADDRESS_WIDTH(12)
 ) cmd_rx3fifo (
-  , .din(rx3_phyq_din)
+    .din(rx3_phyq_din)
   , .full(rx3_phyq_full)
   , .wr_en(rx3_phyq_wr_en)
   , .wr_clk(gmii_3_rx_clk)

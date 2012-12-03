@@ -32,6 +32,12 @@ build/top-routed.xdl: build/top-routed.ncd
 build/top-routed.twr: build/top-routed.ncd
 	cd build && trce -v 10 top-routed.ncd top.pcf
 
+sim:
+	cd ../test && make gtk
+
+lint:
+	make -C ../test -f Makefile lint
+
 clean:
 	rm -rf build/*
 
