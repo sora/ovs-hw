@@ -1,0 +1,92 @@
+module cmdrecv #(
+    parameter NPORT    = 4'h4
+  , parameter PORT_NUM = 4'h0
+) (
+    input            sys_rst
+  , input            sys_clk
+
+  // in FIFO
+  , input      [8:0] rx_dout
+  , input            rx_empty
+  , output reg       rx_rd_en
+  // write flows
+  , output reg       flow_wr_en
+  , output     [8:0] flow_data
+);
+
+
+// read enable
+always @(posedge sys_clk) begin
+  if (sys_rst)
+    rx_rd_en <= 1'b0;
+  else
+    rx_rd_en <= ~rx_empty;
+end
+
+// global counter
+always @(posedge sys_clk) begin
+  if (sys_rst)
+    counter <= 11'b0;
+  else begin
+    if (rx_rd_en == 1'b1) begin
+      counter <= counter + 11'b1;
+      if (dout[8] == 1'b1)
+        counter <= 11'b0;
+    end
+  end
+end
+
+// packet parcer
+reg [15:0] udp_dst_port;
+wire is_cmd_pkt = (udp_dst_port == 16'd3776);
+always @(posedge sys_clk) begin
+  if (sys_rst) begin
+    flow_wr_en   <= 1'b0;
+    udp_dst_port <= 16'b0;
+  end else begin
+    flow_wr_en <= 1'b0;
+    if (rx_dout[8] == 1'b1 && rx_rd_en == 1'b1) begin
+      flow_wr_en <= 1'b1;
+      case (counter)
+        11'h24: udp_dst_port[15:8] <= rx_dout[7:0];
+        11'h25: udp_dst_port[ 7:0] <= rx_dout[7:0];
+        // flow 1
+        11'h2a: flow[7:0] <= rx_dout[7:0];
+        11'h2b: flow[7:0] <= rx_dout[7:0];
+        // flow 2
+        11'h2c: flow[7:0] <= rx_dout[7:0];
+        11'h2d: flow[7:0] <= rx_dout[7:0];
+        // flow 3
+        11'h2e: flow[7:0] <= rx_dout[7:0];
+        11'h2f: flow[7:0] <= rx_dout[7:0];
+        // flow 4
+        11'h30: flow[7:0] <= rx_dout[7:0];
+        11'h31: flow[7:0] <= rx_dout[7:0];
+        // flow 5
+        11'h32: flow[7:0] <= rx_dout[7:0];
+        11'h33: flow[7:0] <= rx_dout[7:0];
+        // flow 6
+        11'h34: flow[7:0] <= rx_dout[7:0];
+        11'h35: flow[7:0] <= rx_dout[7:0];
+        // flow 7
+        11'h36: flow[7:0] <= rx_dout[7:0];
+        11'h37: flow[7:0] <= rx_dout[7:0];
+        // flow 8
+        11'h38: flow[7:0] <= rx_dout[7:0];
+        11'h39: flow[7:0] <= rx_dout[7:0];
+        // flow 9
+        11'h3a: flow[7:0] <= rx_dout[7:0];
+        11'h3b: flow[7:0] <= rx_dout[7:0];
+        // flow 10
+        11'h3c: flow[7:0] <= rx_dout[7:0];
+        11'h3d: begin
+          flow[7:0]   <= rx_dout[7:0];
+        end
+      endcase
+    end
+  end
+end
+assign flow_data = flow;
+
+endmodule
+

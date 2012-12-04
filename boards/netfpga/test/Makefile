@@ -5,6 +5,7 @@ SOURCES=$(wildcard ../rtl/system.v) \
 	$(wildcard ../../../cores/fifo9togmii/rtl/*.v) \
 	$(wildcard ../../../cores/gmii2fifo9/rtl/*.v) \
 	$(wildcard ../../../cores/lookupflow/rtl/*.v) \
+	$(wildcard ../../../cores/cmdrecv/rtl/*.v) \
 	$(wildcard ../../../cores/forwarder/rtl/*.v) \
 	$(wildcard ../../../cores/sram/rtl/*.v) \
 	$(wildcard ../../../cores/dpram/rtl/*.v) \

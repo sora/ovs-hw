@@ -948,6 +948,7 @@ forwarder #(
   , .lookup_tuple(port0of_lookup_tuple)
   , .lookup_ack(port0of_lookup_ack)
   , .of_lookup_fwd_port(port0of_lookup_fwd_port)
+//  , .of_lookup_fwd_port(4'b1111)
 );
 
 //-----------------------------------
@@ -988,6 +989,7 @@ forwarder #(
   , .lookup_tuple(port1of_lookup_tuple)
   , .lookup_ack(port1of_lookup_ack)
   , .of_lookup_fwd_port(port1of_lookup_fwd_port)
+//  , .of_lookup_fwd_port(4'b1111)
 );
 
 //-----------------------------------
@@ -1028,6 +1030,7 @@ forwarder #(
   , .lookup_tuple(port2of_lookup_tuple)
   , .lookup_ack(port2of_lookup_ack)
   , .of_lookup_fwd_port(port2of_lookup_fwd_port)
+//  , .of_lookup_fwd_port(4'b1111)
 );
 
 //-----------------------------------
@@ -1068,6 +1071,7 @@ forwarder #(
   , .lookup_tuple(port3of_lookup_tuple)
   , .lookup_ack(port3of_lookup_ack)
   , .of_lookup_fwd_port(port3of_lookup_fwd_port)
+//  , .of_lookup_fwd_port(4'b1111)
 );
 
 
@@ -1380,158 +1384,57 @@ fifo9togmii tx3fifo2gmii (
 `endif
 
 //-----------------------------------
-// command: fifo
+// command reciever (from PYH#3)
 //-----------------------------------
-wire [8:0] cmd_rx0_phyq_dout;
-wire       cmd_rx0_phyq_wr_en;
-wire       cmd_rx0_phyq_rd_en;
-wire [8:0] cmd_rx1_phyq_dout;
-wire       cmd_rx1_phyq_wr_en;
-wire       cmd_rx1_phyq_rd_en;
-wire [8:0] cmd_rx2_phyq_dout;
-wire       cmd_rx2_phyq_wr_en;
-wire       cmd_rx2_phyq_rd_en;
-wire [8:0] cmd_rx3_phyq_dout;
-wire       cmd_rx3_phyq_wr_en;
-wire       cmd_rx3_phyq_rd_en;
-
+wire [8:0]  cmd_phyq_dout;
+wire        cmd_phyq_wr_en;
+wire        cmd_phyq_rd_en;
+wire        cmd_phyq_empty;
+wire [15:0] cmd_fwd_port;
+wire        cmd_mode;
 
 `ifndef SIMULATION
-asfifo9_12 cmd_rx0_phyq (
-    .din(rx0_phyq_din)
-  , .full()
-  , .wr_en(rx0_phyq_wr_en)
-  , .wr_clk(gmii_0_rx_clk)
-
-  , .dout(cmd_rx0_phyq_dout)
-  , .empty(cmd_rx0_phyq_empty)
-  , .rd_en(cmd_rx0_phyq_rd_en)
-  , .rd_clk(sys_clk)
-
-  , .rst(sys_rst)
-);
-asfifo9_12 cmd_rx1_phyq (
-    .din(rx1_phyq_din)
-  , .full()
-  , .wr_en(rx1_phyq_wr_en)
-  , .wr_clk(gmii_1_rx_clk)
-
-  , .dout(cmd_rx1_phyq_dout)
-  , .empty(cmd_rx1_phyq_empty)
-  , .rd_en(cmd_rx1_phyq_rd_en)
-  , .rd_clk(sys_clk)
-
-  , .rst(sys_rst)
-);
-`ifdef ENABLE_RGMII2
-asfifo9_12 cmd_rx2_phyq (
-    .din(rx2_phyq_din)
-  , .full()
-  , .wr_en(rx2_phyq_wr_en)
-  , .wr_clk(gmii_2_rx_clk)
-
-  , .dout(cmd_rx2_phyq_dout)
-  , .empty(cmd_rx2_phyq_empty)
-  , .rd_en(cmd_rx2_phyq_rd_en)
-  , .rd_clk(sys_clk)
-
-  , .rst(sys_rst)
-);
-`else
-assign cmd_rx2_phyq_empty = 1'b1;
-`endif
-`ifdef ENABLE_RGMII3
-asfifo9_12 cmd_rx3_phyq (
+asfifo9_12 cmd_phyq (
     .din(rx3_phyq_din)
   , .full()
   , .wr_en(rx3_phyq_wr_en)
   , .wr_clk(gmii_3_rx_clk)
-
-  , .dout(cmd_rx3_phyq_dout)
-  , .empty(cmd_rx3_phyq_empty)
-  , .rd_en(cmd_rx3_phyq_rd_en)
+  , .dout(cmd_phyq_dout)
+  , .empty(cmd_phyq_empty)
+  , .rd_en(cmd_phyq_rd_en)
   , .rd_clk(sys_clk)
-
   , .rst(sys_rst)
 );
 `else
-assign cmd_rx3_phyq_empty = 1'b1;
-`endif
-`else
-asfifo # (
-    .DATA_WIDTH(9)
-  , .ADDRESS_WIDTH(12)
-) cmd_rx0fifo (
-    .din(rx0_phyq_din)
-  , .full(rx0_phyq_full)
-  , .wr_en(rx0_phyq_wr_en)
-  , .wr_clk(gmii_0_rx_clk)
-
-  , .dout(cmd_rx0_phyq_dout)
-  , .empty(cmd_rx0_phyq_empty)
-  , .rd_en(cmd_rx0_phyq_rd_en)
-  , .rd_clk(sys_clk)
-
-  , .rst(sys_rst)
-);
-asfifo # (
-    .DATA_WIDTH(9)
-  , .ADDRESS_WIDTH(12)
-) cmd_rx1fifo (
-    .din(rx1_phyq_din)
-  , .full(rx1_phyq_full)
-  , .wr_en(rx1_phyq_wr_en)
-  , .wr_clk(gmii_1_rx_clk)
-
-  , .dout(cmd_rx1_phyq_dout)
-  , .empty(cmd_rx1_phyq_empty)
-  , .rd_en(cmd_rx1_phyq_rd_en)
-  , .rd_clk(sys_clk)
-
-  , .rst(sys_rst)
-);
-`ifdef ENABLE_RGMII2
-asfifo # (
-    .DATA_WIDTH(9)
-  , .ADDRESS_WIDTH(12)
-) cmd_rx2fifo (
-    .din(rx2_phyq_din)
-  , .full(rx2_phyq_full)
-  , .wr_en(rx2_phyq_wr_en)
-  , .wr_clk(gmii_2_rx_clk)
-
-  , .dout(cmd_rx2_phyq_dout)
-  , .empty(cmd_rx2_phyq_empty)
-  , .rd_en(cmd_rx2_phyq_rd_en)
-  , .rd_clk(sys_clk)
-
-  , .rst(sys_rst)
-);
-`else
-assign cmd_rx2_phyq_empty = 1'b1;
-`endif
-`ifdef ENABLE_RGMII3
 asfifo # (
     .DATA_WIDTH(9)
   , .ADDRESS_WIDTH(12)
 ) cmd_rx3fifo (
     .din(rx3_phyq_din)
-  , .full(rx3_phyq_full)
+  , .full()
   , .wr_en(rx3_phyq_wr_en)
   , .wr_clk(gmii_3_rx_clk)
-
-  , .dout(cmd_rx3_phyq_dout)
-  , .empty(cmd_rx3_phyq_empty)
-  , .rd_en(cmd_rx3_phyq_rd_en)
+  , .dout(cmd_phyq_dout)
+  , .empty(cmd_phyq_empty)
+  , .rd_en(cmd_phyq_rd_en)
   , .rd_clk(sys_clk)
-
   , .rst(sys_rst)
 );
-`else
-assign cmd_rx3_phyq_empty = 1'b1;
-`endif
 `endif
 
+cmdrecv #(
+    .NPORT(4'h4)
+  , .PORT_NUM(4'h3)
+) cmdrecv_port3 (
+    .sys_clk(sys_clk)
+  , .sys_rst(sys_rst)
+  , .rx_dout(cmd_phyq_dout)
+  , .rx_empty(cmd_phyq_empty)
+  , .rx_rd_en(cmd_phyq_rd_en)
+
+  , .cmd_fwd_port(cmd_fwd_port)
+  , .cmd_mode(cmd_mode)
+);
 
 //-----------------------------------
 // lookup flow from ethernet
@@ -1546,6 +1449,10 @@ lookupflow #(
   , .tuple(port0of_lookup_tuple)
   , .ack(port0of_lookup_ack)
   , .fwd_port(port0of_lookup_fwd_port)
+
+  , .cmd_fwd_port(cmd_fwd_port[3:0])
+//  , .cmd_fwd_port(4'b1111)
+  , .cmd_mode(cmd_mode)
 );
 
 lookupflow #(
@@ -1558,6 +1465,10 @@ lookupflow #(
   , .tuple(port1of_lookup_tuple)
   , .ack(port1of_lookup_ack)
   , .fwd_port(port1of_lookup_fwd_port)
+
+  , .cmd_fwd_port(cmd_fwd_port[7:4])
+//  , .cmd_fwd_port(4'b1111)
+  , .cmd_mode(cmd_mode)
 );
 
 lookupflow #(
@@ -1570,6 +1481,10 @@ lookupflow #(
   , .tuple(port2of_lookup_tuple)
   , .ack(port2of_lookup_ack)
   , .fwd_port(port2of_lookup_fwd_port)
+
+  , .cmd_fwd_port(cmd_fwd_port[11:8])
+//  , .cmd_fwd_port(4'b1111)
+  , .cmd_mode(cmd_mode)
 );
 
 lookupflow #(
@@ -1582,6 +1497,10 @@ lookupflow #(
   , .tuple(port3of_lookup_tuple)
   , .ack(port3of_lookup_ack)
   , .fwd_port(port3of_lookup_fwd_port)
+
+  , .cmd_fwd_port(cmd_fwd_port[15:12])
+//  , .cmd_fwd_port(4'b1111)
+  , .cmd_mode(cmd_mode)
 );
 
 endmodule

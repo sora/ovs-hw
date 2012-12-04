@@ -15,6 +15,11 @@ test:
 lint:
 	make -C ${BASEDIR}/boards/${BOARD}/synthesis -f Makefile lint
 
-.PHONY: clean load-bitstream tools
+doc:
+	make -C ${BASEDIR}/doc/block_diagram -f Makefile
+
+.PHONY: clean load-bitstream tools doc lint test
 clean:
 	make -C ${BASEDIR}/boards/${BOARD}/synthesis -f common.mak clean
+	make -C ${BASEDIR}/boards/${BOARD}/synthesis -f Makefile clean
+	make -C ${BASEDIR}/doc/block_diagram -f Makefile clean

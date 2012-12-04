@@ -3,6 +3,8 @@
 import sys, socket, struct, time, popen2, re
 
 MAGIC = struct.pack('>BBBB', 0xC0, 0xC0, 0xC0, 0xCC)
+# bonding test (0x0 => off, 0x1 => on)
+MODE = 0x1
 
 argvs = sys.argv
 
@@ -27,7 +29,9 @@ while True:
       inport        = int(m.group(2))
       output        = int(m.group(3))
       flows[inport] = flows[inport] | (1 << output)
-  msg = MAGIC + struct.pack('>bbbb', flows[0], flows[1] | (1 << 4), flows[2] | (2 << 4), flows[3] | (3 << 4))
+  msg = MAGIC + struct.pack('>bbbb', flows[0], flows[1] | (1 << 4), flows[2] | (2 << 4), flows[3] | (3 << 4)) + struct.pack('>b', MODE)
+
+
   s.sendto(msg, host)
   print "*--- --- --- --- --- --- --- ---*"
   time.sleep(3)
