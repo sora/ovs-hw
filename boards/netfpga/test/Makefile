@@ -1,5 +1,5 @@
-SOURCES=tb_system.v \
-	$(wildcard ../rtl/system.v) \
+SIM_TOP=tb_system.v
+SOURCES=$(wildcard ../rtl/system.v) \
 	$(wildcard ../../../cores/asfifo/rtl/*.v) \
 	$(wildcard ../../../cores/sfifo/rtl/*.v) \
 	$(wildcard ../../../cores/fifo9togmii/rtl/*.v) \
@@ -26,16 +26,16 @@ phy_test.hex: phy_ping.hex phy_telnet.hex
 	cat phy_0.hex tmp0 phy_0.hex tmp1 phy_0.hex > phy_test.hex
 	rm tmp0 tmp1
 
-cversim: $(SOURCES)
+cversim: $(SIM_TOP) $(SOURCES)
 	cver $(SOURCES)
 
 lint:
-	verilator --lint-only ${SOURCES}
+	verilator --lint-only setup.v ${SOURCES}
 
 clean:
 	rm -f tb_system verilog.log test.vcd phy_test.hex
 
-tb_system: $(SOURCES)
-	iverilog -o tb_system $(SOURCES)
+tb_system: $(SIM_TOP) $(SOURCES)
+	iverilog -o tb_system $(SIM_TOP) $(SOURCES)
 
 .PHONY: clean isim cversim gtk

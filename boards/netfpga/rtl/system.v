@@ -889,22 +889,22 @@ gmii2fifo9 # (
 // lookup flow table
 //-----------------------------------
 wire         port0of_lookup_req;
-wire [115:0] port0of_lookup_data;
+wire [95:0]  port0of_lookup_tuple;
 wire         port0of_lookup_ack;
 wire         port0of_lookup_err;
 wire [3:0]   port0of_lookup_fwd_port;
 wire         port1of_lookup_req;
-wire [115:0] port1of_lookup_data;
+wire [95:0]  port1of_lookup_tuple;
 wire         port1of_lookup_ack;
 wire         port1of_lookup_err;
 wire [3:0]   port1of_lookup_fwd_port;
 wire         port2of_lookup_req;
-wire [115:0] port2of_lookup_data;
+wire [95:0]  port2of_lookup_tuple;
 wire         port2of_lookup_ack;
 wire         port2of_lookup_err;
 wire [3:0]   port2of_lookup_fwd_port;
 wire         port3of_lookup_req;
-wire [115:0] port3of_lookup_data;
+wire [95:0]  port3of_lookup_tuple;
 wire         port3of_lookup_ack;
 wire         port3of_lookup_err;
 wire [3:0]   port3of_lookup_fwd_port;
@@ -944,7 +944,10 @@ forwarder #(
   , .nic_full(rx0nic_full)
   , .nic_wr_en(rx0nic_wr_en)
 
-  , .of_lookup_fwd_port(of_lookup_fwd_port[3:0])
+  , .lookup_req(port0of_lookup_req)
+  , .lookup_tuple(port0of_lookup_tuple)
+  , .lookup_ack(port0of_lookup_ack)
+  , .of_lookup_fwd_port(port0of_lookup_fwd_port)
 );
 
 //-----------------------------------
@@ -981,7 +984,10 @@ forwarder #(
   , .nic_full(rx1nic_full)
   , .nic_wr_en(rx1nic_wr_en)
 
-  , .of_lookup_fwd_port(of_lookup_fwd_port[7:4])
+  , .lookup_req(port1of_lookup_req)
+  , .lookup_tuple(port1of_lookup_tuple)
+  , .lookup_ack(port1of_lookup_ack)
+  , .of_lookup_fwd_port(port1of_lookup_fwd_port)
 );
 
 //-----------------------------------
@@ -1018,7 +1024,10 @@ forwarder #(
   , .nic_full(rx2nic_full)
   , .nic_wr_en(rx2nic_wr_en)
 
-  , .of_lookup_fwd_port(of_lookup_fwd_port[11:8])
+  , .lookup_req(port2of_lookup_req)
+  , .lookup_tuple(port2of_lookup_tuple)
+  , .lookup_ack(port2of_lookup_ack)
+  , .of_lookup_fwd_port(port2of_lookup_fwd_port)
 );
 
 //-----------------------------------
@@ -1055,7 +1064,10 @@ forwarder #(
   , .nic_full(rx3nic_full)
   , .nic_wr_en(rx3nic_wr_en)
 
-  , .of_lookup_fwd_port(of_lookup_fwd_port[15:12])
+  , .lookup_req(port3of_lookup_req)
+  , .lookup_tuple(port3of_lookup_tuple)
+  , .lookup_ack(port3of_lookup_ack)
+  , .of_lookup_fwd_port(port3of_lookup_fwd_port)
 );
 
 
@@ -1527,13 +1539,49 @@ assign cmd_rx3_phyq_empty = 1'b1;
 lookupflow #(
     .NPORT(4'h4)
   , .PORT_NUM(4'h0)
-) lookupflow_inst (
+) lookupflow_inst0 (
     .sys_clk(sys_clk)
   , .sys_rst(sys_rst)
-  , .rx_dout(cmd_rx3_phyq_dout)
-  , .rx_empty(cmd_rx3_phyq_empty)
-  , .rx_rd_en(cmd_rx3_phyq_rd_en)
-  , .of_lookup_fwd_port(of_lookup_fwd_port)
+  , .req(port0of_lookup_req)
+  , .tuple(port0of_lookup_tuple)
+  , .ack(port0of_lookup_ack)
+  , .fwd_port(port0of_lookup_fwd_port)
+);
+
+lookupflow #(
+    .NPORT(4'h4)
+  , .PORT_NUM(4'h1)
+) lookupflow_inst1 (
+    .sys_clk(sys_clk)
+  , .sys_rst(sys_rst)
+  , .req(port1of_lookup_req)
+  , .tuple(port1of_lookup_tuple)
+  , .ack(port1of_lookup_ack)
+  , .fwd_port(port1of_lookup_fwd_port)
+);
+
+lookupflow #(
+    .NPORT(4'h4)
+  , .PORT_NUM(4'h2)
+) lookupflow_inst2 (
+    .sys_clk(sys_clk)
+  , .sys_rst(sys_rst)
+  , .req(port2of_lookup_req)
+  , .tuple(port2of_lookup_tuple)
+  , .ack(port2of_lookup_ack)
+  , .fwd_port(port2of_lookup_fwd_port)
+);
+
+lookupflow #(
+    .NPORT(4'h4)
+  , .PORT_NUM(4'h3)
+) lookupflow_inst3 (
+    .sys_clk(sys_clk)
+  , .sys_rst(sys_rst)
+  , .req(port3of_lookup_req)
+  , .tuple(port3of_lookup_tuple)
+  , .ack(port3of_lookup_ack)
+  , .fwd_port(port3of_lookup_fwd_port)
 );
 
 endmodule

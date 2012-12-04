@@ -25,6 +25,9 @@ module forwarder #(
   , input            nic_full
   , output reg       nic_wr_en
 // flow lookup
+  , output reg        lookup_req
+  , output reg [95:0] lookup_tuple
+  , input             lookup_ack
   , input      [3:0] of_lookup_fwd_port
 /*
 // flow entries for lookup
@@ -196,8 +199,10 @@ reg [31:0] ipv4_src_ip;
 reg [31:0] ipv4_dst_ip;
 reg [15:0] tp_src_port;
 reg [15:0] tp_dst_port;
+reg [3:0]  fwd_port;
 always @(posedge sys_clk) begin
   if (sys_rst) begin
+    lookup_req  <= 1'b0;
     eth_dst     <= 48'b0;
     eth_src     <= 48'b0;
     eth_type    <= 16'b0;
@@ -209,7 +214,9 @@ always @(posedge sys_clk) begin
     ipv4_dst_ip <= 32'b0;
     tp_src_port <= 16'b0;
     tp_dst_port <= 16'b0;
+    fwd_port    <= 4'b0000;
   end else begin
+    lookup_req  <= 1'b0;
     if (rx_rd_en == 1'b1) begin
       if (rx_dout[8] == 1'b1 && rx_rd_en == 1'b1) begin
         case (counter)
@@ -254,6 +261,16 @@ always @(posedge sys_clk) begin
           // transport layer dst port
           12'h24: tp_dst_port[15: 8] <= rx_dout[7:0];
           12'h25: tp_dst_port[ 7: 0] <= rx_dout[7:0];
+          12'h26: begin
+            lookup_tuple <= {eth_dst[47:0],eth_src[47:0]};
+            lookup_req   <= 1'b1;
+            fwd_port <= 4'b0000;
+          end
+          default: begin
+            if (lookup_ack == 1'b1) begin
+              fwd_port <= of_lookup_fwd_port;
+            end
+          end
         endcase
       end
     end
@@ -261,7 +278,6 @@ always @(posedge sys_clk) begin
 end
 
 
-wire [3:0] fwd_port = of_lookup_fwd_port;
 wire [3:0] fwd_nic  = 4'b0;
 
 //-----------------------------------
