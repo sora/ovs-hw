@@ -6,7 +6,7 @@ BOARD?=netfpga
 bit: tools
 	make -C ${BASEDIR}/boards/${BOARD}/synthesis -f Makefile
 
-load: bitstream
+load: bit
 	make -C ${BASEDIR}/boards/${BOARD}/synthesis -f Makefile load
 
 test:
