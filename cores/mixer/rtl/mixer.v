@@ -76,11 +76,25 @@ sfifo9_12 tx0_mixq (
 
 wire txmixq_half = txmixq_data_count[11];
 
+reg [2:0] mixer_state;
+reg find_frame_data;
+reg find_frame_end;
+parameter STATE_IDLE  = 3'h0;
+parameter STATE_PORT0 = 3'h1;
+parameter STATE_PORT1 = 3'h2;
+parameter STATE_PORT2 = 3'h3;
+parameter STATE_PORT3 = 3'h4;
+parameter STATE_ARP   = 3'h5;
+parameter STATE_NIC   = 3'h6;
+
 //-----------------------------------
 // Check multi pot FIFOs
 //-----------------------------------
 always @(posedge sys_clk) begin
 	if (sys_rst) begin
+		find_frame_data <= 1'b0;
+		find_frame_end <= 1'b0;
+		mixer_state <= STATE_IDLE;
 		port0_rd_en <= 1'b0;
 		port1_rd_en <= 1'b0;
 		port2_rd_en <= 1'b0;
@@ -89,32 +103,164 @@ always @(posedge sys_clk) begin
 		nic_rd_en <= 1'b0;
 		txmixq_wr_en <= 1'b0;
 	end else begin
-		port0_rd_en <= ~port0_empty;
-		port1_rd_en <= ~port1_empty;
-		port2_rd_en <= ~port2_empty;
-		port3_rd_en <= ~port3_empty;
-		arp_rd_en   <= ~arp_empty;
-		nic_rd_en   <= ~nic_empty;
+		port0_rd_en <= 1'b0;
+		port1_rd_en <= 1'b0;
+		port2_rd_en <= 1'b0;
+		port3_rd_en <= 1'b0;
+		arp_rd_en <= 1'b0;
+		nic_rd_en <= 1'b0;
 		txmixq_wr_en <= 1'b0;
-		if (port0_rd_en == 1'b1) begin
-			txmixq_din <= port0_dout[8:0];
-			txmixq_wr_en <= 1'b1;
-		end else if (port1_rd_en == 1'b1) begin
-			txmixq_din <= port1_dout[8:0];
-			txmixq_wr_en <= 1'b1;
-		end else if (port2_rd_en == 1'b1) begin
-			txmixq_din <= port2_dout[8:0];
-			txmixq_wr_en <= 1'b1;
-		end else if (port3_rd_en == 1'b1) begin
-			txmixq_din <= port3_dout[8:0];
-			txmixq_wr_en <= 1'b1;
-		end else if (arp_rd_en == 1'b1) begin
-			txmixq_din <= arp_dout[8:0];
-			txmixq_wr_en <= 1'b1;
-		end else if (nic_rd_en == 1'b1) begin
-			txmixq_din <= nic_dout[8:0];
-			txmixq_wr_en <= 1'b1;
-		end
+		case (mixer_state)
+			STATE_IDLE: begin
+				find_frame_data <= 1'b0;
+				find_frame_end <= 1'b0;
+				if (port0_empty == 1'b0) begin
+					port0_rd_en <= 1'b1;
+					mixer_state <= STATE_PORT0;
+				end else if (port1_empty == 1'b0) begin
+					port1_rd_en <= 1'b1;
+					mixer_state <= STATE_PORT1;
+				end else if (port2_empty == 1'b0) begin
+					port2_rd_en <= 1'b1;
+					mixer_state <= STATE_PORT2;
+				end else if (port3_empty == 1'b0) begin
+					port3_rd_en <= 1'b1;
+					mixer_state <= STATE_PORT3;
+				end else if (arp_empty == 1'b0) begin
+					arp_rd_en <= 1'b1;
+					mixer_state <= STATE_ARP;
+				end else if (nic_empty == 1'b0) begin
+					nic_rd_en <= 1'b1;
+					mixer_state <= STATE_NIC;
+				end
+			end
+			STATE_PORT0: begin
+				if (port0_rd_en == 1'b1) begin
+					txmixq_din <= port0_dout[8:0];
+					txmixq_wr_en <= 1'b1;
+					if (port0_dout[8] == 1'b1)
+						find_frame_data <= 1'b1;
+					else if (find_frame_data == 1'b1)
+						find_frame_end <= 1'b1;
+				end
+				if (port0_empty == 1'b0)
+					port0_rd_en <= 1'b1;
+				if (find_frame_end == 1'b1 || port0_empty == 1'b1)
+					if (port1_empty == 1'b0) begin
+						port1_rd_en <= 1'b1;
+						mixer_state <= STATE_PORT1;
+					end else if (port2_empty == 1'b0) begin
+						port2_rd_en <= 1'b1;
+						mixer_state <= STATE_PORT2;
+					end else if (port3_empty == 1'b0) begin
+						port3_rd_en <= 1'b1;
+						find_frame_data <= 1'b0;
+						find_frame_end <= 1'b0;
+						mixer_state <= STATE_PORT3;
+					end else
+						mixer_state <= STATE_IDLE;
+			end
+			STATE_PORT1: begin
+				if (port1_rd_en == 1'b1) begin
+					txmixq_din <= port1_dout[8:0];
+					txmixq_wr_en <= 1'b1;
+					if (port1_dout[8] == 1'b1)
+						find_frame_data <= 1'b1;
+					else if (find_frame_data == 1'b1)
+						find_frame_end <= 1'b1;
+				end
+				if (port1_empty == 1'b0)
+					port1_rd_en <= 1'b1;
+				if (find_frame_end == 1'b1 || port1_empty == 1'b1)
+					if (port2_empty == 1'b0) begin
+						port2_rd_en <= 1'b1;
+						mixer_state <= STATE_PORT2;
+					end else if (port3_empty == 1'b0) begin
+						port3_rd_en <= 1'b1;
+						mixer_state <= STATE_PORT3;
+					end else if (port0_empty == 1'b0) begin
+						port0_rd_en <= 1'b1;
+						find_frame_data <= 1'b0;
+						find_frame_end <= 1'b0;
+						mixer_state <= STATE_PORT0;
+					end else
+						mixer_state <= STATE_IDLE;
+			end
+			STATE_PORT2: begin
+				if (port2_rd_en == 1'b1) begin
+					txmixq_din <= port2_dout[8:0];
+					txmixq_wr_en <= 1'b1;
+					if (port2_dout[8] == 1'b1)
+						find_frame_data <= 1'b1;
+					else if (find_frame_data == 1'b1)
+						find_frame_end <= 1'b1;
+				end
+				if (port2_empty == 1'b0)
+					port2_rd_en <= 1'b1;
+				if (find_frame_end == 1'b1 || port2_empty == 1'b1)
+					if (port3_empty == 1'b0) begin
+						port3_rd_en <= 1'b1;
+						find_frame_data <= 1'b0;
+						find_frame_end <= 1'b0;
+						mixer_state <= STATE_PORT3;
+					end else if (port0_empty == 1'b0) begin
+						port0_rd_en <= 1'b1;
+						mixer_state <= STATE_PORT0;
+					end else if (port1_empty == 1'b0) begin
+						port1_rd_en <= 1'b1;
+						mixer_state <= STATE_PORT1;
+					end else
+						mixer_state <= STATE_IDLE;
+			end
+			STATE_PORT3: begin
+				if (port3_rd_en == 1'b1) begin
+					txmixq_din <= port3_dout[8:0];
+					txmixq_wr_en <= 1'b1;
+					if (port3_dout[8] == 1'b1)
+						find_frame_data <= 1'b1;
+					else if (find_frame_data == 1'b1)
+						find_frame_end <= 1'b1;
+				end
+				if (port3_empty == 1'b0)
+					port3_rd_en <= 1'b1;
+				if (find_frame_end == 1'b1 || port3_empty == 1'b1)
+					if (port0_empty == 1'b0) begin
+						port0_rd_en <= 1'b1;
+						find_frame_data <= 1'b0;
+						find_frame_end <= 1'b0;
+						mixer_state <= STATE_PORT0;
+					end else if (port1_empty == 1'b0) begin
+						port1_rd_en <= 1'b1;
+						mixer_state <= STATE_PORT1;
+					end else if (port2_empty == 1'b0) begin
+						port2_rd_en <= 1'b1;
+						find_frame_data <= 1'b0;
+						find_frame_end <= 1'b0;
+						mixer_state <= STATE_PORT2;
+					end else
+						mixer_state <= STATE_IDLE;
+			end
+			STATE_ARP: begin
+				if (arp_rd_en == 1'b1) begin
+					txmixq_din <= arp_dout[8:0];
+					txmixq_wr_en <= 1'b1;
+				end
+				if (arp_empty == 1'b0)
+					arp_rd_en <= 1'b1;
+				else
+					mixer_state <= STATE_IDLE;
+			end
+			STATE_NIC: begin
+				if (nic_rd_en == 1'b1) begin
+					txmixq_din <= nic_dout[8:0];
+					txmixq_wr_en <= 1'b1;
+				end
+				if (nic_empty == 1'b0)
+					nic_rd_en <= 1'b1;
+				else
+					mixer_state <= STATE_IDLE;
+			end
+		endcase
 	end
 end
 
@@ -136,3 +282,4 @@ always @(posedge sys_clk) begin
 end
 
 endmodule
+
