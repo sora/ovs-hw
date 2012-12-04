@@ -1,0 +1,143 @@
+digraph G {
+    graph [rankdir=LR, concentrate=true, ranksep=1.0, nodesep=0.5];
+    node[shape=record];
+
+# input
+    PHY0RX[label="PHY0RX", height=0];
+    PHY1RX[label="PHY1RX", height=0];
+    PHY2RX[label="PHY2RX", height=0];
+    PHY3RX[label="PHY3RX", height=0];
+
+# node
+    RX0GMII2FIFO [label = "RX0GMII2FIFO",  height=0];
+    RX0ASFIFO    [label = "RX0ASFIFO",     height=1];
+    CMDRECV0     [label = "CMDRECV0",      height=0];
+    FORWARDER0   [label = "FORWARDER0",    height=4];
+    LOOKUPFLOW0  [label = "LOOKUPFLOW0",   height=1];
+    RX0TX0SFIFO  [label = "RX0TX0\nSFIFO", height=0];
+    RX0TX1SFIFO  [label = "RX0TX1\nSFIFO", height=0];
+    RX0TX2SFIFO  [label = "RX0TX2\nSFIFO", height=0];
+    RX0TX3SFIFO  [label = "RX0TX3\nSFIFO", height=0];
+    TX0MIXER     [label = "{ { <p0>|<p1>|<p2>|<p3> } | TX0MIXER }", height=2];
+    TX0ASFIFO    [label = "TX0ASFIFO",     height=0];
+    TX0FIFO2GMII [label = "TX0FIFO2GMII",  height=0];
+
+    RX1GMII2FIFO [label = "RX1GMII2FIFO",  height=0];
+    RX1ASFIFO    [label = "RX1ASFIFO",     height=1];
+    CMDRECV1     [label = "CMDRECV1",      height=0];
+    FORWARDER1   [label = "FORWARDER1",    height=4];
+    LOOKUPFLOW1  [label = "LOOKUPFLOW1",   height=1];
+    RX0TX0SFIFO  [label = "RX1TX0\nSFIFO", height=0];
+    RX1TX0SFIFO  [label = "RX1TX1\nSFIFO", height=0];
+    RX2TX0SFIFO  [label = "RX1TX2\nSFIFO", height=0];
+    RX3TX0SFIFO  [label = "RX1TX3\nSFIFO", height=0];
+    TX1MIXER     [label = "{ { <p0>|<p1>|<p2>|<p3> } | TX1MIXER }", height=2];
+    TX1ASFIFO    [label = "TX1ASFIFO",     height=0];
+    TX1FIFO2GMII [label = "TX1FIFO2GMII",  height=0];
+
+    RX2GMII2FIFO [label = "RX2GMII2FIFO",  height=0];
+    RX2ASFIFO    [label = "RX2ASFIFO",     height=1];
+    CMDRECV2     [label = "CMDRECV2",      height=0];
+    FORWARDER2   [label = "FORWARDER2",    height=4];
+    LOOKUPFLOW2  [label = "LOOKUPFLOW2",   height=1];
+    RX2TX0SFIFO  [label = "RX2TX0\nSFIFO", height=0];
+    RX2TX1SFIFO  [label = "RX2TX1\nSFIFO", height=0];
+    RX2TX2SFIFO  [label = "RX2TX2\nSFIFO", height=0];
+    RX2TX3SFIFO  [label = "RX2TX3\nSFIFO", height=0];
+    TX2MIXER     [label = "{ { <p0>|<p1>|<p2>|<p3> } | TX2MIXER }", height=2];
+    TX2ASFIFO    [label = "TX2ASFIFO",     height=0];
+    TX2FIFO2GMII [label = "TX2FIFO2GMII",  height=0];
+
+    RX3GMII2FIFO [label = "RX3GMII2FIFO",  height=0];
+    RX3ASFIFO    [label = "RX3ASFIFO",     height=1];
+    CMDRECV3     [label = "CMDRECV3",      height=0];
+    FORWARDER3   [label = "FORWARDER3",    height=4];
+    LOOKUPFLOW3  [label = "LOOKUPFLOW3",   height=1];
+    RX3TX0SFIFO  [label = "RX3TX0\nSFIFO", height=0];
+    RX3TX1SFIFO  [label = "RX3TX1\nSFIFO", height=0];
+    RX3TX2SFIFO  [label = "RX3TX2\nSFIFO", height=0];
+    RX3TX3SFIFO  [label = "RX3TX3\nSFIFO", height=0];
+    TX3MIXER     [label = "{ { <p0>|<p1>|<p2>|<p3> } | TX3MIXER }", height=2];
+    TX3ASFIFO    [label = "TX3ASFIFO",     height=0];
+    TX3FIFO2GMII [label = "TX3FIFO2GMII",  height=0];
+
+# link
+    PHY0RX       -> RX0GMII2FIFO [label=""];
+    RX0GMII2FIFO -> RX0ASFIFO    [label=""];
+    RX0ASFIFO    -> FORWARDER0   [label=""];
+    RX0ASFIFO    -> CMDRECV0     [label=""];
+    FORWARDER0   -> RX0TX0SFIFO  [label=""];
+    FORWARDER0   -> RX0TX1SFIFO  [label=""];
+    FORWARDER0   -> RX0TX2SFIFO  [label=""];
+    FORWARDER0   -> RX0TX3SFIFO  [label=""];
+    FORWARDER0   -> LOOKUPFLOW0  [label=""];
+    CMDRECV0     -> LOOKUPFLOW0  [label=""];
+    RX0TX0SFIFO  -> TX0MIXER:p0  [label=""];
+    RX1TX0SFIFO  -> TX0MIXER:p1  [label=""];
+    RX2TX0SFIFO  -> TX0MIXER:p2  [label=""];
+    RX3TX0SFIFO  -> TX0MIXER:p3  [label=""];
+    TX0MIXER     -> TX0ASFIFO    [label=""];
+    TX0ASFIFO    -> TX0FIFO2GMII [label=""];
+    TX0FIFO2GMII -> PHY0TX       [label=""];
+
+    PHY1RX       -> RX1GMII2FIFO [label=""];
+    RX1GMII2FIFO -> RX1ASFIFO    [label=""];
+    RX1ASFIFO    -> FORWARDER1   [label=""];
+    RX1ASFIFO    -> CMDRECV1     [label=""];
+    FORWARDER1   -> RX1TX0SFIFO  [label=""];
+    FORWARDER1   -> RX1TX1SFIFO  [label=""];
+    FORWARDER1   -> RX1TX2SFIFO  [label=""];
+    FORWARDER1   -> RX1TX3SFIFO  [label=""];
+    FORWARDER1   -> LOOKUPFLOW1  [label=""];
+    CMDRECV1     -> LOOKUPFLOW1  [label=""];
+    RX0TX1SFIFO  -> TX1MIXER:p0  [label=""];
+    RX1TX1SFIFO  -> TX1MIXER:p1  [label=""];
+    RX2TX1SFIFO  -> TX1MIXER:p2  [label=""];
+    RX3TX1SFIFO  -> TX1MIXER:p3  [label=""];
+    TX1MIXER     -> TX1ASFIFO    [label=""];
+    TX1ASFIFO    -> TX1FIFO2GMII [label=""];
+    TX1FIFO2GMII -> PHY1TX       [label=""];
+
+    PHY2RX       -> RX2GMII2FIFO [label=""];
+    RX2GMII2FIFO -> RX2ASFIFO    [label=""];
+    RX2ASFIFO    -> FORWARDER2   [label=""];
+    RX2ASFIFO    -> CMDRECV2     [label=""];
+    FORWARDER2   -> RX2TX0SFIFO  [label=""];
+    FORWARDER2   -> RX2TX1SFIFO  [label=""];
+    FORWARDER2   -> RX2TX2SFIFO  [label=""];
+    FORWARDER2   -> RX2TX3SFIFO  [label=""];
+    FORWARDER2   -> LOOKUPFLOW2  [label=""];
+    CMDRECV2     -> LOOKUPFLOW2  [label=""];
+    RX0TX2SFIFO  -> TX2MIXER:p0  [label=""];
+    RX1TX2SFIFO  -> TX2MIXER:p1  [label=""];
+    RX2TX2SFIFO  -> TX2MIXER:p2  [label=""];
+    RX3TX2SFIFO  -> TX2MIXER:p3  [label=""];
+    TX2MIXER     -> TX2ASFIFO    [label=""];
+    TX2ASFIFO    -> TX2FIFO2GMII [label=""];
+    TX2FIFO2GMII -> PHY2TX       [label=""];
+
+    PHY3RX       -> RX3GMII2FIFO [label=""];
+    RX3GMII2FIFO -> RX3ASFIFO    [label=""];
+    RX3ASFIFO    -> FORWARDER3   [label=""];
+    RX3ASFIFO    -> CMDRECV3     [label=""];
+    FORWARDER3   -> RX3TX0SFIFO  [label=""];
+    FORWARDER3   -> RX3TX1SFIFO  [label=""];
+    FORWARDER3   -> RX3TX2SFIFO  [label=""];
+    FORWARDER3   -> RX3TX3SFIFO  [label=""];
+    FORWARDER3   -> LOOKUPFLOW3  [label=""];
+    CMDRECV3     -> LOOKUPFLOW3  [label=""];
+    RX0TX3SFIFO  -> TX3MIXER:p0  [label=""];
+    RX1TX3SFIFO  -> TX3MIXER:p1  [label=""];
+    RX2TX3SFIFO  -> TX3MIXER:p2  [label=""];
+    RX3TX3SFIFO  -> TX3MIXER:p3  [label=""];
+    TX3MIXER     -> TX3ASFIFO    [label=""];
+    TX3ASFIFO    -> TX3FIFO2GMII [label=""];
+    TX3FIFO2GMII -> PHY3TX       [label=""];
+
+# output
+    PHY0TX[label="PHY0TX", height=0];
+    PHY1TX[label="PHY1TX", height=0];
+    PHY2TX[label="PHY2TX", height=0];
+    PHY3TX[label="PHY3TX", height=0];
+}
+
