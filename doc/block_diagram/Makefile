@@ -6,7 +6,7 @@ PNG=$(TARGET).png
 pdf: $(FILE)
 	dot -Gsplines=none $(FILE) | neato -n -Gsplines=ortho -Tpdf -o$(PDF)
 png: $(FILE)
-	dot -Gsplines=none $(FILE) | neato -n -Gsplines=ortho -Tpng -o$(PNG)
+	dot $(FILE) | neato -n -Tpng -o$(PNG)
 clean:
 	rm -f *.png *.pdf
 

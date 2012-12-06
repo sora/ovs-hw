@@ -98,10 +98,11 @@ always @(posedge sys_clk) begin
   end
 end
 //assign cmd_fwd_port[15:0] = { p3out[3:0], p2out[3:0], p1out[3:0], p0out[3:0] };
+// port3 is used for cmd port
 assign cmd_fwd_port[15:0] = { p3out[3:0] | 4'b0111,
                               p2out[3:0] | 4'b1000,
-                              p1out[3:0] | 4'b1000,
-                              p0out[3:0] | 4'b1000 };
+                              p1out[3:0] | 4'b0000,
+                              p0out[3:0] | 4'b0000 };
 
 assign cmd_mode = mode[0];      // bonding test
 
